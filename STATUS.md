@@ -50,6 +50,7 @@ architecture decisions (see bottom). QA: **73 tests passing + 1 skipped**, ruff 
 | Compliance | Encryption at rest | SQLCipher wiring (Linux wheels in image; key-bind + wrong-key rejection) |
 | CUPS | Queue provisioning | `POST /v1/admin/printers/{id}/provision-queue` (driverless IPP Everywhere) |
 | CUPS | Document passthrough | `POST /v1/print/file` prints finished PDF / PostScript / PCL (PDF/PS auto-filtered, PCL raw); `capabilities.document_formats` advertises support |
+| Office | PDF overlay templates | upload a base PDF + visual drag-and-drop editor (pdf.js) to place text/QR/image fields bound to `data`; stamped at print time (reportlab + pypdf). `overlay` on `/v1/print`, admin `/overlays` CRUD + preview |
 | UI | Visual element builder | drag-reorder ESC/POS element builder + per-type editors, two-way JSON sync |
 | UI | i18n | en/es with language switcher |
 | API | Reprint + pagination | `POST /v1/jobs/{id}/reprint`, cursor pagination on the jobs list (amendments B10/B11) |

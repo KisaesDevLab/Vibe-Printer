@@ -65,12 +65,54 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return (await res.blob()) as unknown as T;
 }
 
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const secret = getSecret();
+  if (secret) headers["Authorization"] = `Bearer ${secret}`;
+  const res = await fetch(path, { method: "POST", headers, body: form });
+  if (res.status === 401) {
+    clearSecret();
+    window.dispatchEvent(new Event("vibe-unauthorized"));
+    throw new ApiError("unauthorized", "Re-enter the secret", 401);
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError(data?.error?.code || "error", data?.error?.message || res.statusText, res.status);
+  }
+  return res.json();
+}
+
 export const api = {
   get: <T>(p: string) => request<T>("GET", p),
   post: <T>(p: string, b?: unknown) => request<T>("POST", p, b),
   put: <T>(p: string, b?: unknown) => request<T>("PUT", p, b),
   del: <T>(p: string) => request<T>("DELETE", p),
+  upload,
 };
+
+export interface Overlay {
+  id: number;
+  name: string;
+  base_asset: string;
+  fields: OverlayField[];
+  sample_data: Record<string, unknown>;
+  version: number;
+}
+
+export interface OverlayField {
+  type: "text" | "qr" | "image";
+  page: number;
+  x: number;
+  y: number;
+  value?: string;
+  asset?: string | null;
+  size?: number;
+  width?: number | null;
+  height?: number | null;
+  font?: string;
+  align?: "left" | "center" | "right";
+  color?: string;
+}
 
 // --- Domain types (kept aligned with app/models.py; codegen is the Phase 26 upgrade) ---
 export interface Printer {

@@ -22,6 +22,8 @@ from .models import (
     DeviceUpdate,
     FormatCreate,
     FormatUpdate,
+    OverlayCreate,
+    OverlayUpdate,
     PrinterCreate,
     PrinterRead,
     PrinterUpdate,
@@ -237,6 +239,67 @@ class Registry:
     def delete_template(self, tid: int) -> None:
         self.get_template(tid)
         self.db.execute("DELETE FROM pdf_templates WHERE id=?", (tid,))
+        self._invalidate()
+
+    # ----------------------------------------------------------------- overlays
+    def list_overlays(self) -> list[dict[str, Any]]:
+        return [
+            self._overlay_row(r)
+            for r in self.db.query("SELECT * FROM overlay_templates ORDER BY id")
+        ]
+
+    def get_overlay(self, oid: int) -> dict[str, Any]:
+        row = self.db.query_one("SELECT * FROM overlay_templates WHERE id=?", (oid,))
+        if row is None:
+            raise ApiError("not_found", f"No overlay with id {oid}")
+        return self._overlay_row(row)
+
+    def _overlay_row(self, row: Any) -> dict[str, Any]:
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "base_asset": row["base_asset"],
+            "fields": _loads(row["fields_json"], []),
+            "sample_data": _loads(row["sample_data"], {}),
+            "version": row["version"],
+        }
+
+    def create_overlay(self, data: OverlayCreate) -> dict[str, Any]:
+        cur = self.db.execute(
+            "INSERT INTO overlay_templates(name,base_asset,fields_json,sample_data,version,"
+            "updated_at) VALUES (?,?,?,?,1,?)",
+            (
+                data.name,
+                data.base_asset,
+                json.dumps([f.model_dump() for f in data.fields]),
+                json.dumps(data.sample_data),
+                utcnow_iso(),
+            ),
+        )
+        self._invalidate()
+        return self.get_overlay(int(cur.lastrowid or 0))
+
+    def update_overlay(self, oid: int, data: OverlayUpdate) -> dict[str, Any]:
+        current = self.get_overlay(oid)
+        self._check_version(current["version"], data.version)
+        self.db.execute(
+            "UPDATE overlay_templates SET name=?,base_asset=?,fields_json=?,sample_data=?,"
+            "version=version+1,updated_at=? WHERE id=?",
+            (
+                data.name,
+                data.base_asset,
+                json.dumps([f.model_dump() for f in data.fields]),
+                json.dumps(data.sample_data),
+                utcnow_iso(),
+                oid,
+            ),
+        )
+        self._invalidate()
+        return self.get_overlay(oid)
+
+    def delete_overlay(self, oid: int) -> None:
+        self.get_overlay(oid)
+        self.db.execute("DELETE FROM overlay_templates WHERE id=?", (oid,))
         self._invalidate()
 
     # -------------------------------------------------------------------- device

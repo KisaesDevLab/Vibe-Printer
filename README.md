@@ -54,8 +54,9 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
 - **Six printer types:** `escpos_network` (TCP :9100), `escpos_usb`, `cups` (office/PDF),
   `zpl_network` (Zebra labels), `star_network` (Star Line Mode), `virtual` (dev/test), plus
   `pool` (failover / round-robin).
-- **Office documents:** render from HTML/CSS templates **or** print finished **PDF / PostScript /
-  PCL** files directly to a CUPS printer (`/v1/print/file`).
+- **Office documents:** render from HTML/CSS templates, **overlay variables onto an uploaded base
+  PDF** (visual drag-and-drop editor; text/QR/image fields), **or** print finished **PDF /
+  PostScript / PCL** files directly (`/v1/print/file`).
 - **Reliable delivery:** durable SQLite queue, **per-printer serialization** (no interleaved
   receipts), **idempotency keys**, retry with backoff, and **mid-send → `uncertain`** (never
   auto-reprints a financial receipt).
@@ -305,6 +306,7 @@ omit all to use the printer's default. Returns the enqueue result — observe th
 | `document` | object | inline element doc `{ "elements": [...] }` (thermal/label) |
 | `format` | int | saved format id (thermal/label) |
 | `template` | int | saved PDF template id (CUPS) |
+| `overlay` | int | saved PDF-overlay id — stamps `data` onto an uploaded base PDF |
 | `data` | object | merged into the template via Jinja |
 | `copies` | int | 1–50 (default 1) |
 | `priority` | int | −100…100, higher runs first (default 0) |
@@ -393,6 +395,7 @@ operator action (resolve / requeue) in the UI or via the admin API.
 | Printers | `GET/POST /printers`, `GET/PUT/DELETE /printers/{id}`, `POST /printers/{id}/test`, `GET /printers/{id}/status`, `POST /printers/{id}/provision-queue`, `POST /discover` |
 | Formats | `GET/POST /formats`, `GET/PUT/DELETE /formats/{id}`, `POST /formats/{id}/preview` |
 | Templates | `GET/POST /templates`, `GET/PUT/DELETE /templates/{id}`, `POST /templates/{id}/preview` |
+| Overlays | `GET/POST /overlays`, `GET/PUT/DELETE /overlays/{id}`, `POST /overlays/{id}/preview`, `GET /overlays/{id}/base`, `GET /overlays/{id}/pages` |
 | Assets | `GET/POST /assets`, `DELETE /assets/{id}` |
 | Jobs | `GET /jobs` (filter `status`, `cursor`, `limit`), `POST /jobs/{id}/{cancel\|requeue\|resolve}`, `DELETE /jobs/{id}/payload` |
 | Config | `POST /config/export`, `POST /config/import` (`dry_run`) |
@@ -471,6 +474,34 @@ CUPS printers render an HTML/CSS template to PDF via WeasyPrint. `data` is merge
 
 `page_setup` controls `size` (e.g. `A4`) and `margins`. WeasyPrint is **locked to local assets** —
 remote URL fetches are blocked (SSRF), and renders are time/memory-bounded.
+
+---
+
+## PDF overlay templates
+
+When you have a fixed **base PDF** — a pre-printed form, letterhead, or government form — you can
+overlay dynamic values onto it instead of recreating it in HTML.
+
+**In the admin UI (Overlays tab):**
+1. Upload the base PDF.
+2. It renders in the browser (pdf.js). Click **+ Text / + QR / + Image**, then **drag** each field
+   onto the page to position it. Pick the page with the page navigator.
+3. Bind each field to a variable (`{{ data.name }}`), set font/size/align/color, and enter sample
+   data. **Preview PDF** stamps the values live; **Save** versions the overlay.
+
+**Field types:** `text` (Jinja value), `qr` (Jinja value → scannable QR), `image` (an uploaded
+asset). Coordinates are stored in PDF points (top-left origin), so they're resolution-independent
+and multi-page aware.
+
+**Print it** to any PDF-capable printer (CUPS, or `virtual` in dev):
+
+```bash
+curl -s localhost:8080/v1/print -H "Authorization: Bearer $SECRET" \
+  -d '{"printer":3,"overlay":1,"data":{"name":"Acme LLC","url":"https://example.com/r/1"}}'
+```
+
+At print time the values are stamped onto the original PDF with reportlab + pypdf (PDF/PS auto-filter
+through CUPS). PDF/PostScript text is selectable in the output; the base content is preserved.
 
 ---
 

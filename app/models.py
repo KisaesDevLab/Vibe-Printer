@@ -151,6 +151,34 @@ class TemplateUpdate(TemplateCreate):
     version: int
 
 
+class OverlayField(BaseModel):
+    """A field stamped onto a base PDF. Coordinates are PDF points, origin TOP-LEFT."""
+
+    type: Literal["text", "qr", "image"] = "text"
+    page: int = 0
+    x: float = 0
+    y: float = 0
+    value: str = ""  # text/qr: Jinja template merged with `data`
+    asset: str | None = None  # image: stored asset name
+    size: float = 12  # text: font size; qr/image: box size in points
+    width: float | None = None  # image override
+    height: float | None = None
+    font: str = "Helvetica"
+    align: Literal["left", "center", "right"] = "left"
+    color: str = "#000000"
+
+
+class OverlayCreate(BaseModel):
+    name: str
+    base_asset: str  # stored asset filename of the uploaded base PDF
+    fields: list[OverlayField] = Field(default_factory=list)
+    sample_data: dict[str, Any] = Field(default_factory=dict)
+
+
+class OverlayUpdate(OverlayCreate):
+    version: int
+
+
 class DeviceSettings(BaseModel):
     name: str = "vibe-print"
     timezone: str = "UTC"
@@ -180,6 +208,7 @@ class PrintRequest(BaseModel):
     document: dict[str, Any] | None = None
     format: int | None = None
     template: int | None = None
+    overlay: int | None = None  # stamp data onto an uploaded base PDF
     data: dict[str, Any] = Field(default_factory=dict)
     copies: int = Field(default=1, ge=1, le=50)
     priority: int = Field(default=0, ge=-100, le=100)  # higher runs first
@@ -208,6 +237,7 @@ class PreviewRequest(BaseModel):
     document: dict[str, Any] | None = None
     format: int | None = None
     template: int | None = None
+    overlay: int | None = None
     data: dict[str, Any] = Field(default_factory=dict)
     # Inline content lets the UI preview UNSAVED edits (no stored-version churn).
     html: str | None = None

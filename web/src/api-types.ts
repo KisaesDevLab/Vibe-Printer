@@ -358,6 +358,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/overlays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Overlays */
+        get: operations["list_overlays_v1_admin_overlays_get"];
+        put?: never;
+        /** Create Overlay */
+        post: operations["create_overlay_v1_admin_overlays_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/overlays/{oid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Overlay */
+        get: operations["get_overlay_v1_admin_overlays__oid__get"];
+        /** Update Overlay */
+        put: operations["update_overlay_v1_admin_overlays__oid__put"];
+        post?: never;
+        /** Delete Overlay */
+        delete: operations["delete_overlay_v1_admin_overlays__oid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/overlays/{oid}/base": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Overlay Base
+         * @description Serve the raw base PDF so the editor can render it for field placement.
+         */
+        get: operations["overlay_base_v1_admin_overlays__oid__base_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/overlays/{oid}/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Overlay Pages
+         * @description Per-page dimensions (points) of the base PDF, for the drag canvas.
+         */
+        get: operations["overlay_pages_v1_admin_overlays__oid__pages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/overlays/{oid}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Overlay
+         * @description Stamp + preview. Accepts inline base_asset/fields/data so the editor previews unsaved edits.
+         */
+        post: operations["preview_overlay_v1_admin_overlays__oid__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/printers": {
         parameters: {
             query?: never;
@@ -924,6 +1021,93 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** OverlayCreate */
+        OverlayCreate: {
+            /** Base Asset */
+            base_asset: string;
+            /** Fields */
+            fields?: components["schemas"]["OverlayField"][];
+            /** Name */
+            name: string;
+            /** Sample Data */
+            sample_data?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * OverlayField
+         * @description A field stamped onto a base PDF. Coordinates are PDF points, origin TOP-LEFT.
+         */
+        OverlayField: {
+            /**
+             * Align
+             * @default left
+             * @enum {string}
+             */
+            align: "left" | "center" | "right";
+            /** Asset */
+            asset?: string | null;
+            /**
+             * Color
+             * @default #000000
+             */
+            color: string;
+            /**
+             * Font
+             * @default Helvetica
+             */
+            font: string;
+            /** Height */
+            height?: number | null;
+            /**
+             * Page
+             * @default 0
+             */
+            page: number;
+            /**
+             * Size
+             * @default 12
+             */
+            size: number;
+            /**
+             * Type
+             * @default text
+             * @enum {string}
+             */
+            type: "text" | "qr" | "image";
+            /**
+             * Value
+             * @default
+             */
+            value: string;
+            /** Width */
+            width?: number | null;
+            /**
+             * X
+             * @default 0
+             */
+            x: number;
+            /**
+             * Y
+             * @default 0
+             */
+            y: number;
+        };
+        /** OverlayUpdate */
+        OverlayUpdate: {
+            /** Base Asset */
+            base_asset: string;
+            /** Fields */
+            fields?: components["schemas"]["OverlayField"][];
+            /** Name */
+            name: string;
+            /** Sample Data */
+            sample_data?: {
+                [key: string]: unknown;
+            };
+            /** Version */
+            version: number;
+        };
         /** PoolParams */
         PoolParams: {
             /** Members */
@@ -956,6 +1140,8 @@ export interface components {
             format?: number | null;
             /** Html */
             html?: string | null;
+            /** Overlay */
+            overlay?: number | null;
             /** Page Setup */
             page_setup?: {
                 [key: string]: unknown;
@@ -982,6 +1168,8 @@ export interface components {
             } | null;
             /** Format */
             format?: number | null;
+            /** Overlay */
+            overlay?: number | null;
             /** Printer */
             printer: number;
             /**
@@ -1927,6 +2115,263 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_overlays_v1_admin_overlays_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    create_overlay_v1_admin_overlays_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverlayCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_overlay_v1_admin_overlays__oid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_overlay_v1_admin_overlays__oid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverlayUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_overlay_v1_admin_overlays__oid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overlay_base_v1_admin_overlays__oid__base_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overlay_pages_v1_admin_overlays__oid__pages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_overlay_v1_admin_overlays__oid__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                oid: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

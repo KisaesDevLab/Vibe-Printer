@@ -4,15 +4,17 @@ import { useI18n } from "./i18n";
 import { DevicePage } from "./pages/Device";
 import { FormatsPage } from "./pages/Formats";
 import { JobsPage } from "./pages/Jobs";
+import { OverlaysPage } from "./pages/Overlays";
 import { PrintersPage } from "./pages/Printers";
 import { TemplatesPage } from "./pages/Templates";
 
-type Tab = "printers" | "formats" | "templates" | "jobs" | "device";
+type Tab = "printers" | "formats" | "templates" | "overlays" | "jobs" | "device";
 
 const TABS: { id: Tab; key: string }[] = [
   { id: "printers", key: "printers" },
   { id: "formats", key: "formats" },
   { id: "templates", key: "templates" },
+  { id: "overlays", key: "overlays" },
   { id: "jobs", key: "jobs" },
   { id: "device", key: "device" },
 ];
@@ -102,6 +104,7 @@ export function App() {
         {tab === "printers" && <PrintersPage />}
         {tab === "formats" && <FormatsPage />}
         {tab === "templates" && <TemplatesPage />}
+        {tab === "overlays" && <OverlaysPage />}
         {tab === "jobs" && <JobsPage />}
         {tab === "device" && <DevicePage />}
       </main>

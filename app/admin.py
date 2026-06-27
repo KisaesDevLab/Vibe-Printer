@@ -16,6 +16,8 @@ from .models import (
     DeviceUpdate,
     FormatCreate,
     FormatUpdate,
+    OverlayCreate,
+    OverlayUpdate,
     PreviewRequest,
     PrinterCreate,
     PrinterUpdate,
@@ -316,6 +318,85 @@ def preview_template(
         data=body.get("data") or tpl["sample_data"],
     )
     return _render_preview(ctx, req)
+
+
+# --------------------------------------------------------------------------- overlays (PDF)
+@router.get("/overlays")
+def list_overlays(ctx: Context = Depends(get_ctx)) -> list[dict[str, Any]]:
+    return ctx.registry.list_overlays()
+
+
+@router.post("/overlays", status_code=201)
+def create_overlay(
+    data: OverlayCreate, ctx: Context = Depends(get_ctx), auth: AuthInfo = Depends(require_auth)
+) -> dict[str, Any]:
+    o = ctx.registry.create_overlay(data)
+    ctx.audit.config_change(
+        entity="overlay", entity_id=str(o["id"]), action="create", real_ip=auth.real_ip
+    )
+    return o
+
+
+@router.get("/overlays/{oid}")
+def get_overlay(oid: int, ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
+    return ctx.registry.get_overlay(oid)
+
+
+@router.put("/overlays/{oid}")
+def update_overlay(
+    oid: int, data: OverlayUpdate, ctx: Context = Depends(get_ctx),
+    auth: AuthInfo = Depends(require_auth),
+) -> dict[str, Any]:
+    o = ctx.registry.update_overlay(oid, data)
+    ctx.audit.config_change(
+        entity="overlay", entity_id=str(oid), action="update", real_ip=auth.real_ip
+    )
+    return o
+
+
+@router.delete("/overlays/{oid}", status_code=204)
+def delete_overlay(
+    oid: int, ctx: Context = Depends(get_ctx), auth: AuthInfo = Depends(require_auth)
+) -> Response:
+    ctx.registry.delete_overlay(oid)
+    ctx.audit.config_change(
+        entity="overlay", entity_id=str(oid), action="delete", real_ip=auth.real_ip
+    )
+    return Response(status_code=204)
+
+
+@router.get("/overlays/{oid}/pages")
+def overlay_pages(oid: int, ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
+    """Per-page dimensions (points) of the base PDF, for the drag canvas."""
+    from .overlay import page_sizes
+
+    ov = ctx.registry.get_overlay(oid)
+    base = (ctx.settings.assets_dir / ov["base_asset"]).read_bytes()
+    return {"base_asset": ov["base_asset"], "pages": page_sizes(base)}
+
+
+@router.get("/overlays/{oid}/base")
+def overlay_base(oid: int, ctx: Context = Depends(get_ctx)) -> Response:
+    """Serve the raw base PDF so the editor can render it for field placement."""
+    ov = ctx.registry.get_overlay(oid)
+    base = (ctx.settings.assets_dir / ov["base_asset"]).read_bytes()
+    return Response(base, media_type="application/pdf")
+
+
+@router.post("/overlays/{oid}/preview")
+def preview_overlay(
+    oid: int, body: dict[str, Any] = Body(default={}), ctx: Context = Depends(get_ctx)
+) -> Response:
+    """Stamp + preview; accepts inline base_asset/fields/data for live (unsaved) editor preview."""
+    from .overlay import render_overlay
+
+    ov = ctx.registry.get_overlay(oid)
+    base_asset = body.get("base_asset") or ov["base_asset"]
+    fields = body.get("fields", ov["fields"])
+    data = body.get("data") or ov["sample_data"]
+    base = (ctx.settings.assets_dir / base_asset).read_bytes()
+    pdf = render_overlay(base, fields, data, ctx.settings.assets_dir)
+    return Response(pdf, media_type="application/pdf")
 
 
 # --------------------------------------------------------------------------- assets

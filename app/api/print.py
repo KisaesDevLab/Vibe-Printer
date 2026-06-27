@@ -45,6 +45,21 @@ def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
     template_id = req.template
     resolved_version = None
 
+    # Overlay → stamped PDF; works on any PDF-capable printer (CUPS/virtual).
+    if req.overlay:
+        caps = ctx.backend_capabilities(printer)
+        if "pdf" not in caps.document_formats:
+            raise ApiError("unsupported_for_printer", "printer does not accept PDF (overlay)")
+        ov = ctx.registry.get_overlay(req.overlay)
+        payload["overlay"] = req.overlay
+        return {
+            "printer": printer,
+            "payload": payload,
+            "format_id": None,
+            "template_id": None,
+            "resolved_version": ov["version"],
+        }
+
     if printer.type == "cups":
         if req.document or req.format:
             raise ApiError("unsupported_for_printer", "CUPS printers use a PDF template")
@@ -202,6 +217,15 @@ def print_preview(
 
 def _render_preview(ctx: Context, req: PreviewRequest) -> Response:
     data = req.data
+    # Overlay preview → stamped PDF.
+    if req.overlay is not None:
+        from ..overlay import render_overlay
+
+        ov = ctx.registry.get_overlay(req.overlay)
+        base = (ctx.settings.assets_dir / ov["base_asset"]).read_bytes()
+        pdf = render_overlay(base, ov["fields"], data or ov["sample_data"], ctx.settings.assets_dir)
+        return Response(pdf, media_type="application/pdf")
+
     # PDF path: inline html, an explicit template, or a CUPS printer target.
     is_pdf = (
         req.html is not None

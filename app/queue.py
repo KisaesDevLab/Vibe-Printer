@@ -470,6 +470,20 @@ class Worker:
             return PrintPayload(kind="pdf", data=raw, options=opts)
 
         data = payload.get("data", {})
+
+        # PDF overlay: stamp data-bound fields onto an uploaded base PDF.
+        if payload.get("overlay"):
+            from .overlay import render_overlay
+
+            ov = self.ctx.registry.get_overlay(int(payload["overlay"]))
+            base_path = self.ctx.settings.assets_dir / ov["base_asset"]
+            if not base_path.exists():
+                raise ApiError("render_error", f"base PDF asset missing: {ov['base_asset']}")
+            pdf = render_overlay(
+                base_path.read_bytes(), ov["fields"], data, self.ctx.settings.assets_dir
+            )
+            return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
+
         caps = self.ctx.backend_capabilities(printer)
 
         if printer.type == "cups":
