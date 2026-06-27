@@ -122,22 +122,46 @@ def provision_queue(
 
 @router.post("/printers/{printer_id}/test")
 def test_print(printer_id: int, ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
-    printer = ctx.registry.get_printer(printer_id)
-    if printer.type == "cups":
-        raise ApiError("unsupported_for_printer", "use a template-based test for CUPS")
-    doc = {
-        "elements": [
-            {"type": "text", "value": "vibe-print test", "align": "center", "bold": True},
-            {"type": "text", "value": "{{ data.ts }}", "align": "center"},
-            {"type": "feed", "lines": 1},
-            {"type": "cut"},
-        ]
-    }
     from .db import utcnow_iso
+
+    printer = ctx.registry.get_printer(printer_id)
+    ts = utcnow_iso()
+
+    if printer.type == "cups":
+        # Office printers get a one-page PDF test (rendered with reportlab; no template needed).
+        import base64
+        import io
+
+        from reportlab.pdfgen import canvas
+
+        buf = io.BytesIO()
+        c = canvas.Canvas(buf, pagesize=(612, 792))
+        c.setFont("Helvetica-Bold", 18)
+        c.drawString(72, 720, "Vibe Print — test page")
+        c.setFont("Helvetica", 11)
+        c.drawString(72, 698, ts)
+        c.showPage()
+        c.save()
+        payload: dict[str, Any] = {
+            "file_content": base64.b64encode(buf.getvalue()).decode(),
+            "content_type": "pdf",
+            "copies": 1,
+        }
+    else:
+        # Thermal / label / Star / virtual / pool get an element-based test.
+        doc = {
+            "elements": [
+                {"type": "text", "value": "vibe-print test", "align": "center", "bold": True},
+                {"type": "text", "value": "{{ data.ts }}", "align": "center"},
+                {"type": "feed", "lines": 1},
+                {"type": "cut"},
+            ]
+        }
+        payload = {"document": doc, "data": {"ts": ts}, "copies": 1}
 
     job = ctx.jobs.enqueue(
         printer_id=printer_id,
-        payload={"document": doc, "data": {"ts": utcnow_iso()}, "copies": 1},
+        payload=payload,
         global_max=ctx.settings.queue_max_depth,
         per_printer_max=ctx.settings.per_printer_max_depth,
     )

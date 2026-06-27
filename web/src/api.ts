@@ -119,6 +119,7 @@ export interface Printer {
   id: number;
   name: string;
   type: string;
+  params: Record<string, unknown>;
   capabilities?: Record<string, unknown>;
   default_format_id?: number | null;
   default_template_id?: number | null;
