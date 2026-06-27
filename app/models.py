@@ -107,6 +107,8 @@ class Capabilities(BaseModel):
     paper_width_dots: int | None = None
     pulse: bool = False
     pdf: bool = False
+    # Finished-document formats this printer accepts via /v1/print/file (CUPS/office).
+    document_formats: list[str] = Field(default_factory=list)
 
 
 class PrinterRead(BaseModel):
@@ -187,6 +189,18 @@ class PrintRequest(BaseModel):
 class RawPrintRequest(BaseModel):
     printer: int
     data: str  # base64 ESC/POS
+
+
+class FilePrintRequest(BaseModel):
+    """Print a finished document (PDF / PostScript / PCL) to an office/CUPS printer."""
+
+    printer: int
+    content: str  # base64-encoded document bytes
+    content_type: Literal["pdf", "postscript", "pcl"] = "pdf"
+    copies: int = Field(default=1, ge=1, le=50)
+    media: str | None = None
+    priority: int = Field(default=0, ge=-100, le=100)
+    scheduled_at: str | None = None
 
 
 class PreviewRequest(BaseModel):

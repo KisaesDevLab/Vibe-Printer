@@ -53,7 +53,10 @@ class CupsBackend:
             raise BackendError(f"failed to provision CUPS queue {self.queue}: {e}") from e
 
     def capabilities(self) -> Capabilities:
-        return Capabilities(cut=False, qr=False, barcode=[], raster=True, pulse=False, pdf=True)
+        return Capabilities(
+            cut=False, qr=False, barcode=[], raster=True, pulse=False, pdf=True,
+            document_formats=["pdf", "postscript", "pcl"],
+        )
 
     def status(self) -> dict:
         try:
@@ -70,16 +73,25 @@ class CupsBackend:
         except (PrinterUnreachable, BackendError) as e:
             return {"reachable": False, "state": "offline", "errors": [str(e)]}
 
+    _EXT = {"pdf": ".pdf", "postscript": ".ps", "pcl": ".pcl"}
+
     def send(self, payload: PrintPayload) -> SendResult:
-        if payload.kind != "pdf":
-            raise BackendError("CUPS backend requires a PDF payload")
+        if payload.kind not in self._EXT:
+            raise BackendError("CUPS backend requires a pdf/postscript/pcl payload")
         conn = self._conn()
         options = {}
         if self.media:
             options["media"] = self.media
         if payload.options.get("media"):
             options["media"] = payload.options["media"]
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        copies = int(payload.options.get("copies", 1))
+        if copies > 1:
+            options["copies"] = str(copies)
+        # PCL is device-native: pass it through CUPS unfiltered. PDF/PostScript are auto-filtered
+        # (and converted for IPP-Everywhere printers).
+        if payload.kind == "pcl":
+            options["document-format"] = "application/vnd.cups-raw"
+        with tempfile.NamedTemporaryFile(suffix=self._EXT[payload.kind], delete=False) as f:
             f.write(payload.data)
             tmp = Path(f.name)
         try:

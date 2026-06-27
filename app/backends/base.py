@@ -31,7 +31,7 @@ class BackendError(Exception):
 
 @dataclass
 class PrintPayload:
-    kind: Literal["escpos", "pdf", "zpl", "star"]
+    kind: Literal["escpos", "pdf", "zpl", "star", "postscript", "pcl"]
     data: bytes
     options: dict = field(default_factory=dict)  # e.g. media, copies for CUPS
 

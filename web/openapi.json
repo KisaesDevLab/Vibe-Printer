@@ -215,6 +215,71 @@
         "title": "EscposUsbParams",
         "type": "object"
       },
+      "FilePrintRequest": {
+        "description": "Print a finished document (PDF / PostScript / PCL) to an office/CUPS printer.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "content_type": {
+            "default": "pdf",
+            "enum": [
+              "pdf",
+              "postscript",
+              "pcl"
+            ],
+            "title": "Content Type",
+            "type": "string"
+          },
+          "copies": {
+            "default": 1,
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Copies",
+            "type": "integer"
+          },
+          "media": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media"
+          },
+          "printer": {
+            "title": "Printer",
+            "type": "integer"
+          },
+          "priority": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": -100.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          }
+        },
+        "required": [
+          "printer",
+          "content"
+        ],
+        "title": "FilePrintRequest",
+        "type": "object"
+      },
       "FormatCreate": {
         "properties": {
           "elements": {
@@ -2568,6 +2633,65 @@
           }
         },
         "summary": "Print Job"
+      }
+    },
+    "/v1/print/file": {
+      "post": {
+        "description": "Print a finished PDF / PostScript / PCL document to an office (CUPS) printer.",
+        "operationId": "print_file_v1_print_file_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilePrintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Print File V1 Print File Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Print File"
       }
     },
     "/v1/print/preview": {

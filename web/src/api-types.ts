@@ -631,6 +631,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/print/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Print File
+         * @description Print a finished PDF / PostScript / PCL document to an office (CUPS) printer.
+         */
+        post: operations["print_file_v1_print_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/print/preview": {
         parameters: {
             query?: never;
@@ -840,6 +860,36 @@ export interface components {
             type: "escpos_usb";
             /** Vendor Id */
             vendor_id: number;
+        };
+        /**
+         * FilePrintRequest
+         * @description Print a finished document (PDF / PostScript / PCL) to an office/CUPS printer.
+         */
+        FilePrintRequest: {
+            /** Content */
+            content: string;
+            /**
+             * Content Type
+             * @default pdf
+             * @enum {string}
+             */
+            content_type: "pdf" | "postscript" | "pcl";
+            /**
+             * Copies
+             * @default 1
+             */
+            copies: number;
+            /** Media */
+            media?: string | null;
+            /** Printer */
+            printer: number;
+            /**
+             * Priority
+             * @default 0
+             */
+            priority: number;
+            /** Scheduled At */
+            scheduled_at?: string | null;
         };
         /** FormatCreate */
         FormatCreate: {
@@ -2525,6 +2575,43 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PrintRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    print_file_v1_print_file_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FilePrintRequest"];
             };
         };
         responses: {

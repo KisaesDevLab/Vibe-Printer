@@ -54,6 +54,8 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
 - **Six printer types:** `escpos_network` (TCP :9100), `escpos_usb`, `cups` (office/PDF),
   `zpl_network` (Zebra labels), `star_network` (Star Line Mode), `virtual` (dev/test), plus
   `pool` (failover / round-robin).
+- **Office documents:** render from HTML/CSS templates **or** print finished **PDF / PostScript /
+  PCL** files directly to a CUPS printer (`/v1/print/file`).
 - **Reliable delivery:** durable SQLite queue, **per-printer serialization** (no interleaved
   receipts), **idempotency keys**, retry with backoff, and **mid-send → `uncertain`** (never
   auto-reprints a financial receipt).
@@ -220,6 +222,17 @@ curl -s localhost:8080/v1/admin/printers/$PID/provision-queue -H "Authorization:
 CUPS jobs are submitted concurrently (its own spooler) and polled to true completion. The CUPS web
 admin is disabled and `:631` is bound to localhost — no remote admin surface.
 
+You can print office output two ways: render an [HTML/CSS template](#pdf-templates-office) with
+`/v1/print`, or send a **finished PDF / PostScript / PCL** with
+[`/v1/print/file`](#post-v1printfile). Example printing an existing PDF:
+
+```bash
+curl -s localhost:8080/v1/print/file -H "Authorization: Bearer $SECRET" -d "{
+  \"printer\": $PID, \"content_type\": \"pdf\", \"media\": \"Letter\",
+  \"content\": \"$(base64 -w0 invoice.pdf)\"
+}"
+```
+
 ### ZPL label printers
 
 For Zebra-style label printers over TCP :9100. Elements render to ZPL II.
@@ -316,6 +329,32 @@ enable with `allow_raw: true`. Rejected for CUPS.
 curl -s localhost:8080/v1/print/raw -H "Authorization: Bearer $SECRET" \
   -d '{"printer":1,"data":"G0BoZWxsbwo="}'
 ```
+
+#### `POST /v1/print/file`
+
+Print a **finished document** (PDF / PostScript / PCL) to an office (CUPS) printer — no template
+rendering. PDF and PostScript are auto-filtered (and converted for IPP-Everywhere printers); PCL is
+passed through unfiltered to a PCL-capable device. Honors `Idempotency-Key`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `printer` | int | **required** — a CUPS printer |
+| `content` | string | **required** — base64-encoded document bytes |
+| `content_type` | enum | `pdf` (default) · `postscript` · `pcl` |
+| `copies` | int | 1–50 |
+| `media` | string | e.g. `A4`, `Letter` |
+| `priority` / `scheduled_at` | int / string | as for `/v1/print` |
+
+```bash
+curl -s localhost:8080/v1/print/file -H "Authorization: Bearer $SECRET" -d "{
+  \"printer\": 3, \"content_type\": \"pdf\", \"media\": \"Letter\",
+  \"content\": \"$(base64 -w0 invoice.pdf)\"
+}"
+```
+
+A printer advertises what it accepts in `GET /v1/printers` → `capabilities.document_formats`
+(non-office printers return an empty list and reject the call with `unsupported_for_printer`). The
+default `MAX_BODY_BYTES` is 5 MiB — raise it for larger documents.
 
 #### `POST /v1/print/preview`
 

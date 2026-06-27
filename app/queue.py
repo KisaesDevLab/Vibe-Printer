@@ -456,6 +456,19 @@ class Worker:
                 return PrintPayload(kind="star", data=data * copies)
             return PrintPayload(kind="escpos", data=data * copies)
 
+        # Finished-document passthrough (PDF / PostScript / PCL) — no templating.
+        if payload.get("file_content"):
+            raw = base64.b64decode(payload["file_content"])
+            opts: dict[str, Any] = {"copies": copies}
+            if payload.get("media"):
+                opts["media"] = payload["media"]
+            ct = payload.get("content_type", "pdf")
+            if ct == "postscript":
+                return PrintPayload(kind="postscript", data=raw, options=opts)
+            if ct == "pcl":
+                return PrintPayload(kind="pcl", data=raw, options=opts)
+            return PrintPayload(kind="pdf", data=raw, options=opts)
+
         data = payload.get("data", {})
         caps = self.ctx.backend_capabilities(printer)
 

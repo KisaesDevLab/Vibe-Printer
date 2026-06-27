@@ -25,6 +25,7 @@ class VirtualBackend:
             raster=True,
             pulse=True,
             pdf=True,
+            document_formats=["pdf", "postscript", "pcl"],
             columns=self.params.get("columns", 48),
             paper_width_dots=self.params.get("paper_width_dots", 576),
         )
@@ -33,7 +34,10 @@ class VirtualBackend:
         return {"reachable": True, "state": "idle", "errors": []}
 
     def send(self, payload: PrintPayload) -> SendResult:
-        ext = "pdf" if payload.kind == "pdf" else "bin"
+        ext = {
+            "pdf": "pdf", "postscript": "ps", "pcl": "pcl",
+            "zpl": "zpl", "star": "star", "escpos": "bin",
+        }.get(payload.kind, "bin")
         path = self.out_dir / f"printer-{self.printer_id}.{ext}"
         path.write_bytes(payload.data)
         # Virtual delivery is fully observable -> completed.

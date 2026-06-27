@@ -11,7 +11,7 @@ from fastapi.responses import Response
 from ..context import Context
 from ..deps import AuthInfo, get_ctx, require_auth
 from ..errors import ApiError
-from ..models import PreviewRequest, PrintRequest, RawPrintRequest
+from ..models import FilePrintRequest, PreviewRequest, PrintRequest, RawPrintRequest
 from ..queue import _canonical_hash
 from ..render import render_preview_png
 from ..templating import merge_format, render_pdf
@@ -135,6 +135,59 @@ def print_raw(
         global_max=ctx.settings.queue_max_depth,
         per_printer_max=ctx.settings.per_printer_max_depth,
     )
+    return {"job_id": job["id"], "status": job["status"]}
+
+
+@router.post("/print/file")
+def print_file(
+    req: FilePrintRequest,
+    ctx: Context = Depends(get_ctx),
+    auth: AuthInfo = Depends(require_auth),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+) -> dict[str, Any]:
+    """Print a finished PDF / PostScript / PCL document to an office (CUPS) printer."""
+    printer = ctx.registry.get_printer(req.printer)
+    caps = ctx.backend_capabilities(printer)
+    if req.content_type not in caps.document_formats:
+        raise ApiError(
+            "unsupported_for_printer",
+            f"printer {req.printer} does not accept {req.content_type} documents",
+        )
+    try:
+        decoded = base64.b64decode(req.content, validate=True)
+    except Exception as e:
+        raise ApiError("validation_error", "content is not valid base64") from e
+    if not decoded:
+        raise ApiError("validation_error", "empty document")
+
+    _enforce_quota(ctx, req.printer)
+    payload = {
+        "file_content": req.content,
+        "content_type": req.content_type,
+        "media": req.media,
+        "copies": req.copies,
+    }
+    if idempotency_key:
+        request_hash = _canonical_hash({"printer": req.printer, **payload})
+        existing = ctx.jobs.idempotency_lookup(idempotency_key)
+        if existing:
+            if existing["request_hash"] != request_hash:
+                raise ApiError("idempotency_conflict", "key reused with a different payload")
+            job = ctx.jobs.get(existing["job_id"])
+            return {"job_id": job["id"], "status": job["status"], "idempotent_replay": True}
+
+    job = ctx.jobs.enqueue(
+        printer_id=req.printer,
+        payload=payload,
+        priority=req.priority,
+        scheduled_at=req.scheduled_at,
+        global_max=ctx.settings.queue_max_depth,
+        per_printer_max=ctx.settings.per_printer_max_depth,
+    )
+    if idempotency_key:
+        ctx.jobs.idempotency_store(
+            idempotency_key, _canonical_hash({"printer": req.printer, **payload}), job["id"]
+        )
     return {"job_id": job["id"], "status": job["status"]}
 
 
