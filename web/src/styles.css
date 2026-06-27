@@ -1,0 +1,47 @@
+:root {
+  --bg: #0f1115;
+  --panel: #181b22;
+  --border: #2a2f3a;
+  --fg: #e6e8ec;
+  --muted: #8b93a3;
+  --accent: #4f8cff;
+  --danger: #ff5d5d;
+  --ok: #3ecf8e;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); }
+button {
+  background: var(--accent); color: white; border: 0; padding: 8px 14px;
+  border-radius: 6px; cursor: pointer; font-size: 14px;
+}
+button.ghost { background: transparent; border: 1px solid var(--border); color: var(--fg); }
+button.danger { background: var(--danger); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+input, textarea, select {
+  background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px; font-size: 14px; width: 100%;
+}
+textarea { font-family: ui-monospace, monospace; min-height: 160px; }
+.shell { display: flex; min-height: 100vh; }
+.nav { width: 200px; background: var(--panel); border-right: 1px solid var(--border); padding: 16px; }
+.nav h1 { font-size: 16px; margin: 0 0 16px; }
+.nav a { display: block; padding: 8px 10px; border-radius: 6px; color: var(--muted);
+  cursor: pointer; text-decoration: none; }
+.nav a.active { background: var(--accent); color: white; }
+.main { flex: 1; padding: 24px; max-width: 1100px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px; margin-bottom: 16px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.badge { padding: 2px 8px; border-radius: 10px; font-size: 12px; background: var(--border); }
+.badge.ok { background: rgba(62,207,142,0.2); color: var(--ok); }
+.badge.err { background: rgba(255,93,93,0.2); color: var(--danger); }
+.muted { color: var(--muted); }
+label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+.center { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.gate { width: 360px; }
+.error { color: var(--danger); font-size: 13px; }
+img.preview { background: white; max-width: 100%; border-radius: 4px; }

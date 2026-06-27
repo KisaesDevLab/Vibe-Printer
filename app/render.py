@@ -1,0 +1,276 @@
+"""ESC/POS rendering (elements -> bytes) and server-side previews (PNG for thermal, PDF for office).
+
+The same merged element list drives both the real ESC/POS byte stream and the PNG preview, so
+the preview faithfully reflects what will print. Capability-aware: elements the target printer
+can't do raise ``unsupported_for_printer`` (P8.2).
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from PIL import Image, ImageDraw, ImageFont
+
+from .errors import ApiError
+from .models import Capabilities
+
+_QR_EC = {"L": 0, "M": 1, "Q": 2, "H": 3}  # error-correction levels (escpos constants)
+_QR_MODEL = {1: 1, 2: 2, "1": 1, "2": 2}
+
+
+def _qr_kwargs(el: dict[str, Any]) -> dict[str, Any]:
+    """Map a `qr` element's options onto python-escpos qr() kwargs.
+
+    Options: size (1-16), native (printer command vs raster image), ec (L/M/Q/H),
+    model (1/2), center (bool).
+    """
+    kwargs: dict[str, Any] = {
+        "size": max(1, min(16, int(el.get("size", 6)))),
+        "native": bool(el.get("native", False)),
+        "center": bool(el.get("center", False)),
+    }
+    ec = str(el.get("ec", "")).upper()
+    if ec in _QR_EC:
+        kwargs["ec"] = _QR_EC[ec]
+    model = el.get("model")
+    if model in _QR_MODEL:
+        kwargs["model"] = _QR_MODEL[model]
+    return kwargs
+
+
+# --------------------------------------------------------------------------- text layout helpers
+def _fit(text: str, width: int, align: str) -> str:
+    text = text[:width]
+    pad = width - len(text)
+    if align == "right":
+        return " " * pad + text
+    if align == "center":
+        left = pad // 2
+        return " " * left + text + " " * (pad - left)
+    return text + " " * pad
+
+
+def _table_lines(el: dict[str, Any], columns: int) -> list[str]:
+    cols = el.get("cols", [])
+    aligns = el.get("align", ["left"] * len(cols))
+    lines: list[str] = []
+    for row in el.get("rows", []):
+        cells = []
+        for i in range(len(cols)):
+            val = str(row[i]) if i < len(row) else ""
+            align = aligns[i] if i < len(aligns) else "left"
+            cells.append(_fit(val, cols[i], align))
+        lines.append(" ".join(cells)[:columns])
+    return lines
+
+
+def _as_text_lines(elements: list[dict[str, Any]], columns: int) -> list[str]:
+    """A plain-text rendering used for the PNG preview."""
+    out: list[str] = []
+    for el in elements:
+        t = el.get("type")
+        if t == "text":
+            val = str(el.get("value", ""))
+            align = el.get("align", "left")
+            for line in val.split("\n"):
+                out.append(_fit(line, columns, align))
+        elif t == "rule":
+            out.append("-" * columns)
+        elif t == "table":
+            out.extend(_table_lines(el, columns))
+        elif t == "qr":
+            out.append(_fit(f"[QR: {el.get('value','')}]", columns, "center"))
+        elif t == "barcode":
+            label = f"[{el.get('format', 'CODE128')}: {el.get('value', '')}]"
+            out.append(_fit(label, columns, "center"))
+        elif t == "image":
+            out.append(_fit(f"[image: {el.get('asset','')}]", columns, "center"))
+        elif t == "feed":
+            out.extend([""] * int(el.get("lines", 1)))
+        elif t == "cut":
+            out.append("-" * columns)
+        elif t == "pulse":
+            out.append("[cash drawer]")
+    return out
+
+
+# --------------------------------------------------------------------------- ESC/POS byte render
+def render_escpos(
+    elements: list[dict[str, Any]],
+    params: dict[str, Any],
+    caps: Capabilities,
+    assets_dir: Path,
+) -> bytes:
+    from escpos.printer import Dummy
+
+    d = Dummy(encoding=params.get("encoding", "cp437"))
+    columns = params.get("columns", 48)
+    paper_width_dots = params.get("paper_width_dots", 576)
+
+    for el in elements:
+        t = el.get("type")
+        if t == "text":
+            size = el.get("size", [1, 1])
+            d.set(
+                align=el.get("align", "left"),
+                bold=bool(el.get("bold", False)),
+                width=int(size[0]) if isinstance(size, list) else 1,
+                height=int(size[1]) if isinstance(size, list) and len(size) > 1 else 1,
+            )
+            d.textln(str(el.get("value", "")))
+            d.set()  # reset
+        elif t == "rule":
+            d.textln("-" * columns)
+        elif t == "table":
+            for line in _table_lines(el, columns):
+                d.textln(line)
+        elif t == "qr":
+            if not caps.qr:
+                raise ApiError("unsupported_for_printer", "printer has no QR support")
+            d.qr(str(el.get("value", "")), **_qr_kwargs(el))
+        elif t == "barcode":
+            fmt = el.get("format", "CODE128")
+            if fmt not in caps.barcode:
+                raise ApiError("unsupported_for_printer", f"printer lacks barcode {fmt}")
+            code = str(el.get("value", ""))
+            # python-escpos CODE128 requires a code-set selector prefix ({A/{B/{C).
+            if fmt == "CODE128" and not code.startswith("{"):
+                code = "{B" + code
+            d.barcode(code, fmt, function_type="B")
+        elif t == "image":
+            if not caps.raster:
+                raise ApiError("unsupported_for_printer", "printer has no raster/image support")
+            img = _load_asset_image(el.get("asset", ""), assets_dir, paper_width_dots)
+            d.image(img)
+        elif t == "pulse":
+            if caps.pulse:
+                d.cashdraw(2)
+        elif t == "feed":
+            d.ln(int(el.get("lines", 1)))
+        elif t == "cut":
+            if caps.cut:
+                d.cut()
+        else:
+            raise ApiError("validation_error", f"unknown element type: {t}")
+    return bytes(d.output)
+
+
+def _zpl_escape(s: str) -> str:
+    return s.replace("^", " ").replace("~", " ")
+
+
+def render_zpl(elements: list[dict[str, Any]], params: dict[str, Any], caps: Capabilities) -> bytes:
+    """Render elements to ZPL II for Zebra-style label printers (deferred plan item, now built)."""
+    width = params.get("label_width_dots", 812)
+    columns = params.get("columns", 64)
+    out: list[str] = ["^XA", "^CI28"]  # UTF-8
+    y = 20
+    for el in elements:
+        t = el.get("type")
+        if t == "text":
+            size = el.get("size", [1, 1])
+            h = 24 * (int(size[1]) if isinstance(size, list) and len(size) > 1 else 1)
+            out.append(f"^FO20,{y}^A0N,{h},{h}^FD{_zpl_escape(str(el.get('value','')))}^FS")
+            y += h + 8
+        elif t == "rule":
+            out.append(f"^FO20,{y}^GB{width - 40},2,2^FS")
+            y += 14
+        elif t == "table":
+            for line in _table_lines(el, columns):
+                out.append(f"^FO20,{y}^A0N,24,24^FD{_zpl_escape(line)}^FS")
+                y += 28
+        elif t == "qr":
+            if not caps.qr:
+                raise ApiError("unsupported_for_printer", "printer has no QR support")
+            out.append(f"^FO20,{y}^BQN,2,{int(el.get('size',6))}^FDLA,{_zpl_escape(str(el.get('value','')))}^FS")
+            y += 140
+        elif t == "barcode":
+            fmt = el.get("format", "CODE128")
+            if fmt not in caps.barcode:
+                raise ApiError("unsupported_for_printer", f"printer lacks barcode {fmt}")
+            out.append(f"^FO20,{y}^BCN,90,Y,N,N^FD{_zpl_escape(str(el.get('value','')))}^FS")
+            y += 130
+        elif t == "feed":
+            y += 24 * int(el.get("lines", 1))
+        elif t in ("cut", "pulse", "image"):
+            pass  # labels auto-separate; raster/drawer not modeled here
+        else:
+            raise ApiError("validation_error", f"unknown element type: {t}")
+    out.append("^XZ")
+    return ("\n".join(out) + "\n").encode("utf-8", "replace")
+
+
+def render_star(
+    elements: list[dict[str, Any]], params: dict[str, Any], caps: Capabilities
+) -> bytes:
+    """Render elements to Star Line Mode commands (text/align/cut). Deferred item, now built."""
+    esc = b"\x1b"
+    enc = params.get("encoding", "ascii")
+    columns = params.get("columns", 48)
+    out = bytearray(esc + b"@")  # initialize
+    align_map = {"left": 0, "center": 1, "right": 2}
+    for el in elements:
+        t = el.get("type")
+        if t == "text":
+            out += esc + b"\x1d\x61" + bytes([align_map.get(el.get("align", "left"), 0)])
+            bold = bool(el.get("bold", False))
+            if bold:
+                out += esc + b"E"
+            out += str(el.get("value", "")).encode(enc, "replace") + b"\n"
+            if bold:
+                out += esc + b"F"
+        elif t == "rule":
+            out += ("-" * columns).encode(enc, "replace") + b"\n"
+        elif t == "table":
+            for line in _table_lines(el, columns):
+                out += line.encode(enc, "replace") + b"\n"
+        elif t == "feed":
+            out += b"\n" * int(el.get("lines", 1))
+        elif t == "cut":
+            if caps.cut:
+                out += esc + b"d\x03"  # partial cut
+        elif t in ("qr", "barcode", "image", "pulse"):
+            pass  # not modeled in Star Line Mode minimal renderer
+        else:
+            raise ApiError("validation_error", f"unknown element type: {t}")
+    return bytes(out)
+
+
+def _load_asset_image(asset_name: str, assets_dir: Path, paper_width_dots: int) -> Image.Image:
+    path = assets_dir / asset_name
+    if not path.exists():
+        raise ApiError("render_error", f"asset not found: {asset_name}")
+    img = Image.open(path).convert("L")
+    if img.width > paper_width_dots:
+        ratio = paper_width_dots / img.width
+        img = img.resize((paper_width_dots, int(img.height * ratio)))
+    return img.convert("1")  # 1-bit dither for thermal
+
+
+# --------------------------------------------------------------------------- PNG preview
+def render_preview_png(
+    elements: list[dict[str, Any]], params: dict[str, Any]
+) -> bytes:
+    import io
+
+    columns = params.get("columns", 48)
+    lines = _as_text_lines(elements, columns)
+    if not lines:
+        lines = ["(empty)"]
+    font: Any
+    try:
+        font = ImageFont.truetype("DejaVuSansMono.ttf", 16)
+    except OSError:
+        font = ImageFont.load_default()
+
+    char_w, line_h = 9, 20
+    width = max(columns * char_w + 16, 200)
+    height = len(lines) * line_h + 16
+    img = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(img)
+    for i, line in enumerate(lines):
+        draw.text((8, 8 + i * line_h), line, fill="black", font=font)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()

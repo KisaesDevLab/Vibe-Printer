@@ -1,0 +1,2734 @@
+{
+  "components": {
+    "schemas": {
+      "Body_upload_asset_v1_admin_assets_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_asset_v1_admin_assets_post",
+        "type": "object"
+      },
+      "CupsParams": {
+        "properties": {
+          "media": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media"
+          },
+          "queue": {
+            "title": "Queue",
+            "type": "string"
+          },
+          "type": {
+            "const": "cups",
+            "default": "cups",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "queue"
+        ],
+        "title": "CupsParams",
+        "type": "object"
+      },
+      "DeviceUpdate": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "name": {
+            "default": "vibe-print",
+            "title": "Name",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "UTC",
+            "title": "Timezone",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "DeviceUpdate",
+        "type": "object"
+      },
+      "EscposNetworkParams": {
+        "properties": {
+          "codepage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codepage"
+          },
+          "columns": {
+            "default": 48,
+            "title": "Columns",
+            "type": "integer"
+          },
+          "cut": {
+            "default": true,
+            "title": "Cut",
+            "type": "boolean"
+          },
+          "encoding": {
+            "default": "cp437",
+            "title": "Encoding",
+            "type": "string"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "paper_width_dots": {
+            "default": 576,
+            "title": "Paper Width Dots",
+            "type": "integer"
+          },
+          "port": {
+            "default": 9100,
+            "title": "Port",
+            "type": "integer"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "timeout": {
+            "default": 10.0,
+            "title": "Timeout",
+            "type": "number"
+          },
+          "type": {
+            "const": "escpos_network",
+            "default": "escpos_network",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "title": "EscposNetworkParams",
+        "type": "object"
+      },
+      "EscposUsbParams": {
+        "properties": {
+          "columns": {
+            "default": 48,
+            "title": "Columns",
+            "type": "integer"
+          },
+          "cut": {
+            "default": true,
+            "title": "Cut",
+            "type": "boolean"
+          },
+          "encoding": {
+            "default": "cp437",
+            "title": "Encoding",
+            "type": "string"
+          },
+          "paper_width_dots": {
+            "default": 576,
+            "title": "Paper Width Dots",
+            "type": "integer"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "type": {
+            "const": "escpos_usb",
+            "default": "escpos_usb",
+            "title": "Type",
+            "type": "string"
+          },
+          "vendor_id": {
+            "title": "Vendor Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vendor_id",
+          "product_id"
+        ],
+        "title": "EscposUsbParams",
+        "type": "object"
+      },
+      "FormatCreate": {
+        "properties": {
+          "elements": {
+            "additionalProperties": true,
+            "title": "Elements",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sample_data": {
+            "additionalProperties": true,
+            "title": "Sample Data",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "FormatCreate",
+        "type": "object"
+      },
+      "FormatUpdate": {
+        "properties": {
+          "elements": {
+            "additionalProperties": true,
+            "title": "Elements",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sample_data": {
+            "additionalProperties": true,
+            "title": "Sample Data",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "FormatUpdate",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "PoolParams": {
+        "properties": {
+          "members": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "strategy": {
+            "default": "failover",
+            "enum": [
+              "failover",
+              "round_robin"
+            ],
+            "title": "Strategy",
+            "type": "string"
+          },
+          "type": {
+            "const": "pool",
+            "default": "pool",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "PoolParams",
+        "type": "object"
+      },
+      "PreviewRequest": {
+        "properties": {
+          "css": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Css"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Html"
+          },
+          "page_setup": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Setup"
+          },
+          "printer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Printer"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
+          }
+        },
+        "title": "PreviewRequest",
+        "type": "object"
+      },
+      "PrintRequest": {
+        "properties": {
+          "copies": {
+            "default": 1,
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Copies",
+            "type": "integer"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "printer": {
+            "title": "Printer",
+            "type": "integer"
+          },
+          "priority": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": -100.0,
+            "title": "Priority",
+            "type": "integer"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
+          }
+        },
+        "required": [
+          "printer"
+        ],
+        "title": "PrintRequest",
+        "type": "object"
+      },
+      "PrinterCreate": {
+        "properties": {
+          "allow_raw": {
+            "default": false,
+            "title": "Allow Raw",
+            "type": "boolean"
+          },
+          "default_format_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Format Id"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "params": {
+            "discriminator": {
+              "mapping": {
+                "cups": "#/components/schemas/CupsParams",
+                "escpos_network": "#/components/schemas/EscposNetworkParams",
+                "escpos_usb": "#/components/schemas/EscposUsbParams",
+                "pool": "#/components/schemas/PoolParams",
+                "star_network": "#/components/schemas/StarNetworkParams",
+                "virtual": "#/components/schemas/VirtualParams",
+                "zpl_network": "#/components/schemas/ZplNetworkParams"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EscposNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/EscposUsbParams"
+              },
+              {
+                "$ref": "#/components/schemas/CupsParams"
+              },
+              {
+                "$ref": "#/components/schemas/VirtualParams"
+              },
+              {
+                "$ref": "#/components/schemas/ZplNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/StarNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/PoolParams"
+              }
+            ],
+            "title": "Params"
+          }
+        },
+        "required": [
+          "name",
+          "params"
+        ],
+        "title": "PrinterCreate",
+        "type": "object"
+      },
+      "PrinterUpdate": {
+        "properties": {
+          "allow_raw": {
+            "default": false,
+            "title": "Allow Raw",
+            "type": "boolean"
+          },
+          "default_format_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Format Id"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "params": {
+            "discriminator": {
+              "mapping": {
+                "cups": "#/components/schemas/CupsParams",
+                "escpos_network": "#/components/schemas/EscposNetworkParams",
+                "escpos_usb": "#/components/schemas/EscposUsbParams",
+                "pool": "#/components/schemas/PoolParams",
+                "star_network": "#/components/schemas/StarNetworkParams",
+                "virtual": "#/components/schemas/VirtualParams",
+                "zpl_network": "#/components/schemas/ZplNetworkParams"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EscposNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/EscposUsbParams"
+              },
+              {
+                "$ref": "#/components/schemas/CupsParams"
+              },
+              {
+                "$ref": "#/components/schemas/VirtualParams"
+              },
+              {
+                "$ref": "#/components/schemas/ZplNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/StarNetworkParams"
+              },
+              {
+                "$ref": "#/components/schemas/PoolParams"
+              }
+            ],
+            "title": "Params"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "params",
+          "version"
+        ],
+        "title": "PrinterUpdate",
+        "type": "object"
+      },
+      "RawPrintRequest": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "string"
+          },
+          "printer": {
+            "title": "Printer",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "printer",
+          "data"
+        ],
+        "title": "RawPrintRequest",
+        "type": "object"
+      },
+      "StarNetworkParams": {
+        "properties": {
+          "columns": {
+            "default": 48,
+            "title": "Columns",
+            "type": "integer"
+          },
+          "encoding": {
+            "default": "ascii",
+            "title": "Encoding",
+            "type": "string"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "port": {
+            "default": 9100,
+            "title": "Port",
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 10.0,
+            "title": "Timeout",
+            "type": "number"
+          },
+          "type": {
+            "const": "star_network",
+            "default": "star_network",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "title": "StarNetworkParams",
+        "type": "object"
+      },
+      "TemplateCreate": {
+        "properties": {
+          "css": {
+            "default": "",
+            "title": "Css",
+            "type": "string"
+          },
+          "html": {
+            "default": "",
+            "title": "Html",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "page_setup": {
+            "additionalProperties": true,
+            "title": "Page Setup",
+            "type": "object"
+          },
+          "sample_data": {
+            "additionalProperties": true,
+            "title": "Sample Data",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TemplateCreate",
+        "type": "object"
+      },
+      "TemplateUpdate": {
+        "properties": {
+          "css": {
+            "default": "",
+            "title": "Css",
+            "type": "string"
+          },
+          "html": {
+            "default": "",
+            "title": "Html",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "page_setup": {
+            "additionalProperties": true,
+            "title": "Page Setup",
+            "type": "object"
+          },
+          "sample_data": {
+            "additionalProperties": true,
+            "title": "Sample Data",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "TemplateUpdate",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VirtualParams": {
+        "properties": {
+          "columns": {
+            "default": 48,
+            "title": "Columns",
+            "type": "integer"
+          },
+          "paper_width_dots": {
+            "default": 576,
+            "title": "Paper Width Dots",
+            "type": "integer"
+          },
+          "type": {
+            "const": "virtual",
+            "default": "virtual",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "VirtualParams",
+        "type": "object"
+      },
+      "ZplNetworkParams": {
+        "properties": {
+          "dpmm": {
+            "default": 8,
+            "title": "Dpmm",
+            "type": "integer"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "label_width_dots": {
+            "default": 812,
+            "title": "Label Width Dots",
+            "type": "integer"
+          },
+          "port": {
+            "default": 9100,
+            "title": "Port",
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 10.0,
+            "title": "Timeout",
+            "type": "number"
+          },
+          "type": {
+            "const": "zpl_network",
+            "default": "zpl_network",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "title": "ZplNetworkParams",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Vibe Print",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/admin/assets": {
+      "get": {
+        "operationId": "list_assets_v1_admin_assets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Assets V1 Admin Assets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Assets"
+      },
+      "post": {
+        "operationId": "upload_asset_v1_admin_assets_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_asset_v1_admin_assets_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload Asset V1 Admin Assets Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Asset"
+      }
+    },
+    "/v1/admin/assets/{asset_id}": {
+      "delete": {
+        "operationId": "delete_asset_v1_admin_assets__asset_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "title": "Asset Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Asset"
+      }
+    },
+    "/v1/admin/audit/config": {
+      "get": {
+        "operationId": "audit_config_v1_admin_audit_config_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Audit Config V1 Admin Audit Config Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Config"
+      }
+    },
+    "/v1/admin/audit/print": {
+      "get": {
+        "operationId": "audit_print_v1_admin_audit_print_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Audit Print V1 Admin Audit Print Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Print"
+      }
+    },
+    "/v1/admin/audit/verify": {
+      "get": {
+        "description": "Verify the tamper-evident hash chains for both audit logs.",
+        "operationId": "audit_verify_v1_admin_audit_verify_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Audit Verify V1 Admin Audit Verify Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Audit Verify"
+      }
+    },
+    "/v1/admin/backup/snapshot": {
+      "post": {
+        "description": "Create a consistent on-disk DB snapshot for the backup job to ship to B2 (P22.7).",
+        "operationId": "backup_snapshot_v1_admin_backup_snapshot_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Backup Snapshot V1 Admin Backup Snapshot Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Backup Snapshot"
+      }
+    },
+    "/v1/admin/config/export": {
+      "post": {
+        "operationId": "export_config_v1_admin_config_export_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export Config"
+      }
+    },
+    "/v1/admin/config/import": {
+      "post": {
+        "operationId": "import_config_v1_admin_config_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Import Config V1 Admin Config Import Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Config"
+      }
+    },
+    "/v1/admin/device": {
+      "get": {
+        "operationId": "get_device_v1_admin_device_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Device V1 Admin Device Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Device"
+      },
+      "put": {
+        "operationId": "update_device_v1_admin_device_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Device V1 Admin Device Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Device"
+      }
+    },
+    "/v1/admin/diagnostics": {
+      "get": {
+        "operationId": "diagnostics_v1_admin_diagnostics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Diagnostics V1 Admin Diagnostics Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Diagnostics"
+      }
+    },
+    "/v1/admin/discover": {
+      "post": {
+        "operationId": "discover_v1_admin_discover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Discover V1 Admin Discover Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discover"
+      }
+    },
+    "/v1/admin/formats": {
+      "get": {
+        "operationId": "list_formats_v1_admin_formats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Formats V1 Admin Formats Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Formats"
+      },
+      "post": {
+        "operationId": "create_format_v1_admin_formats_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormatCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Format V1 Admin Formats Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Format"
+      }
+    },
+    "/v1/admin/formats/{fid}": {
+      "delete": {
+        "operationId": "delete_format_v1_admin_formats__fid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "title": "Fid",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Format"
+      },
+      "get": {
+        "operationId": "get_format_v1_admin_formats__fid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "title": "Fid",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Format V1 Admin Formats  Fid  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Format"
+      },
+      "put": {
+        "operationId": "update_format_v1_admin_formats__fid__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "title": "Fid",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormatUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Format V1 Admin Formats  Fid  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Format"
+      }
+    },
+    "/v1/admin/formats/{fid}/preview": {
+      "post": {
+        "operationId": "preview_format_v1_admin_formats__fid__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "title": "Fid",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Format"
+      }
+    },
+    "/v1/admin/heartbeat/test": {
+      "post": {
+        "operationId": "heartbeat_test_v1_admin_heartbeat_test_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Heartbeat Test V1 Admin Heartbeat Test Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Heartbeat Test"
+      }
+    },
+    "/v1/admin/jobs": {
+      "get": {
+        "operationId": "list_jobs_v1_admin_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Jobs V1 Admin Jobs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Jobs"
+      }
+    },
+    "/v1/admin/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancel_job_v1_admin_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Job V1 Admin Jobs  Job Id  Cancel Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job"
+      }
+    },
+    "/v1/admin/jobs/{job_id}/payload": {
+      "delete": {
+        "description": "On-demand erasure of a single job's payload (Phase 29.4).",
+        "operationId": "erase_payload_v1_admin_jobs__job_id__payload_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Erase Payload V1 Admin Jobs  Job Id  Payload Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Erase Payload"
+      }
+    },
+    "/v1/admin/jobs/{job_id}/requeue": {
+      "post": {
+        "operationId": "requeue_job_v1_admin_jobs__job_id__requeue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Requeue Job V1 Admin Jobs  Job Id  Requeue Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Requeue Job"
+      }
+    },
+    "/v1/admin/jobs/{job_id}/resolve": {
+      "post": {
+        "operationId": "resolve_job_v1_admin_jobs__job_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resolve Job V1 Admin Jobs  Job Id  Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Job"
+      }
+    },
+    "/v1/admin/printers": {
+      "get": {
+        "operationId": "list_printers_v1_admin_printers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Printers V1 Admin Printers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Printers"
+      },
+      "post": {
+        "operationId": "create_printer_v1_admin_printers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrinterCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Printer V1 Admin Printers Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Printer"
+      }
+    },
+    "/v1/admin/printers/{printer_id}": {
+      "delete": {
+        "operationId": "delete_printer_v1_admin_printers__printer_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Printer"
+      },
+      "get": {
+        "operationId": "get_printer_v1_admin_printers__printer_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Printer V1 Admin Printers  Printer Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Printer"
+      },
+      "put": {
+        "operationId": "update_printer_v1_admin_printers__printer_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrinterUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Printer V1 Admin Printers  Printer Id  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Printer"
+      }
+    },
+    "/v1/admin/printers/{printer_id}/provision-queue": {
+      "post": {
+        "description": "Create/configure a CUPS queue from the registry (P6.1).",
+        "operationId": "provision_queue_v1_admin_printers__printer_id__provision_queue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Provision Queue V1 Admin Printers  Printer Id  Provision Queue Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Provision Queue"
+      }
+    },
+    "/v1/admin/printers/{printer_id}/status": {
+      "get": {
+        "operationId": "printer_status_v1_admin_printers__printer_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Printer Status V1 Admin Printers  Printer Id  Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Printer Status"
+      }
+    },
+    "/v1/admin/printers/{printer_id}/test": {
+      "post": {
+        "operationId": "test_print_v1_admin_printers__printer_id__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Test Print V1 Admin Printers  Printer Id  Test Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Print"
+      }
+    },
+    "/v1/admin/provision": {
+      "post": {
+        "operationId": "provision_v1_admin_provision_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Provision V1 Admin Provision Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Provision"
+      }
+    },
+    "/v1/admin/provision/status": {
+      "get": {
+        "operationId": "provision_status_v1_admin_provision_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Provision Status V1 Admin Provision Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Provision Status"
+      }
+    },
+    "/v1/admin/remote/status": {
+      "get": {
+        "description": "Tunnel health (P16.4): poll cloudflared /ready. Hostname is display-only (Decision 12).",
+        "operationId": "remote_status_v1_admin_remote_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Remote Status V1 Admin Remote Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Remote Status"
+      }
+    },
+    "/v1/admin/retention/prune": {
+      "post": {
+        "description": "Run retention pruning immediately (jobs + audit + idempotency).",
+        "operationId": "prune_now_v1_admin_retention_prune_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Prune Now V1 Admin Retention Prune Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Prune Now"
+      }
+    },
+    "/v1/admin/templates": {
+      "get": {
+        "operationId": "list_templates_v1_admin_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Templates V1 Admin Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Templates"
+      },
+      "post": {
+        "operationId": "create_template_v1_admin_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Template V1 Admin Templates Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Template"
+      }
+    },
+    "/v1/admin/templates/{tid}": {
+      "delete": {
+        "operationId": "delete_template_v1_admin_templates__tid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "title": "Tid",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Template"
+      },
+      "get": {
+        "operationId": "get_template_v1_admin_templates__tid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "title": "Tid",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Template V1 Admin Templates  Tid  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Template"
+      },
+      "put": {
+        "operationId": "update_template_v1_admin_templates__tid__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "title": "Tid",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Template V1 Admin Templates  Tid  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Template"
+      }
+    },
+    "/v1/admin/templates/{tid}/preview": {
+      "post": {
+        "operationId": "preview_template_v1_admin_templates__tid__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "title": "Tid",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Template"
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Job V1 Jobs  Job Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job"
+      }
+    },
+    "/v1/jobs/{job_id}/reprint": {
+      "post": {
+        "description": "Re-render and re-enqueue from the stored payload + recorded version (amendment B10).",
+        "operationId": "reprint_v1_jobs__job_id__reprint_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Reprint V1 Jobs  Job Id  Reprint Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reprint"
+      }
+    },
+    "/v1/print": {
+      "post": {
+        "operationId": "print_job_v1_print_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Print Job V1 Print Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Print Job"
+      }
+    },
+    "/v1/print/preview": {
+      "post": {
+        "operationId": "print_preview_v1_print_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Print Preview"
+      }
+    },
+    "/v1/print/raw": {
+      "post": {
+        "operationId": "print_raw_v1_print_raw_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RawPrintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Print Raw V1 Print Raw Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Print Raw"
+      }
+    },
+    "/v1/printers": {
+      "get": {
+        "operationId": "list_printers_v1_printers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Printers V1 Printers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Printers"
+      }
+    },
+    "/v1/printers/{printer_id}/status": {
+      "get": {
+        "operationId": "printer_status_v1_printers__printer_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Printer Status V1 Printers  Printer Id  Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Printer Status"
+      }
+    },
+    "/v1/version": {
+      "get": {
+        "operationId": "version_v1_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Version V1 Version Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Version"
+      }
+    }
+  }
+}

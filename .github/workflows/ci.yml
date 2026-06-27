@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check app tests
+      - name: Typecheck
+        run: mypy app
+      - name: Tests
+        env:
+          VIBE_PRINT_SECRET: ci-secret
+        run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm install
+        working-directory: web
+      - name: Check OpenAPI→TS types are up to date (no drift)
+        run: |
+          pip install -e ".[dev]"
+          python -m app.openapi_dump > web/openapi.json
+          npm --prefix web run gen:api
+          git diff --exit-code web/src/api-types.ts web/openapi.json
+      - run: npm run typecheck
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Build admin UI into app/static
+        run: |
+          python -m app.openapi_dump > web/openapi.json
+          npm --prefix web ci || npm --prefix web install
+          npm --prefix web run gen:api
+          npm --prefix web run build
+      - name: Install Playwright browser
+        run: npx --prefix web playwright install --with-deps chromium
+      - name: Run app + e2e
+        env:
+          VIBE_PRINT_SECRET: e2e-secret
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8080/admin/
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8080 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 1; done
+          npm --prefix web run e2e
+
+  image:
+    needs: [backend, frontend, e2e]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: vibe-print:${{ github.ref_name }}

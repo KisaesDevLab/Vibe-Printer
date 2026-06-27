@@ -1,0 +1,47 @@
+# Example config for `POST /v1/admin/config/import` (or import on first boot).
+# Export the live config any time via `POST /v1/admin/config/export`.
+
+printers:
+  - name: Virtual Thermal
+    params:
+      type: virtual
+      columns: 48
+      paper_width_dots: 576
+    default_format: 1
+    allow_raw: false
+  - name: Front Counter
+    params:
+      type: escpos_network
+      host: 192.168.1.50
+      port: 9100
+      columns: 48
+      paper_width_dots: 576
+      encoding: cp437
+      cut: true
+    default_format: 1
+    allow_raw: false
+  - name: Office Laser
+    params:
+      type: cups
+      queue: HP_LaserJet
+      media: A4
+    default_template: 1
+
+formats:
+  - name: Receipt
+    elements:
+      elements:
+        - {type: text, value: "{{ data.company }}", align: center, bold: true, size: [2, 2]}
+        - {type: rule}
+        - {type: text, value: "TOTAL {{ data.total }}", align: right, bold: true}
+        - {type: cut}
+    sample_data:
+      company: Acme Co
+      total: "24.48"
+
+templates:
+  - name: Report
+    html: "<h1>{{ data.title }}</h1>"
+    css: "h1{font-family:sans-serif}"
+    page_setup: {size: A4, margins: 1.5cm}
+    sample_data: {title: Monthly Report}

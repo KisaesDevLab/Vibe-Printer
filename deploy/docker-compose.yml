@@ -1,0 +1,54 @@
+# Vibe Print deployment. Profiles:
+#   (default)         LAN-only gateway
+#   --profile caddy   front with Caddy for LAN TLS
+#   --profile cloudflare  outbound Cloudflare Tunnel (no inbound ports)
+#
+# Set a UNIQUE VIBE_PRINT_SECRET per appliance in .env — never a product-wide default.
+
+services:
+  vibe-print:
+    build: ..
+    # Pin to an @sha256 digest in production; deploy/upgrade.sh overrides VIBE_PRINT_IMAGE.
+    image: ${VIBE_PRINT_IMAGE:-vibe-print:latest}
+    restart: unless-stopped
+    environment:
+      VIBE_PRINT_SECRET: ${VIBE_PRINT_SECRET:?set a unique secret in .env}
+      VIBE_PRINT_DATA_DIR: /data
+      VIBE_PRINT_IMAGE_DIGEST: ${VIBE_PRINT_IMAGE:-dev}
+      # When fronted by Caddy/cloudflared, trust that peer for real-IP resolution:
+      # VIBE_PRINT_TRUSTED_PROXIES: '["127.0.0.1","172.16.0.0/12"]'
+    volumes:
+      - vibe-data:/data
+    ports:
+      - "8080:8080"      # drop this when using the caddy/cloudflare profiles
+    # For USB printers, pass the device through (P5.2):
+    # devices:
+    #   - "/dev/bus/usb:/dev/bus/usb"
+    stop_grace_period: 30s
+
+  caddy:
+    image: caddy:2
+    profiles: ["caddy"]
+    restart: unless-stopped
+    depends_on: [vibe-print]
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["cloudflare"]
+    restart: unless-stopped
+    depends_on: [vibe-print]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env for the cloudflare profile}
+
+volumes:
+  vibe-data:
+  caddy-data:
+  caddy-config:

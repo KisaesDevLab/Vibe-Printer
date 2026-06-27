@@ -1,0 +1,10 @@
+# LAN TLS front for Vibe Print (Decision 15 / P22.6).
+# Replace the site address with your LAN hostname; Caddy will manage the cert
+# (internal CA for *.local, or a real cert if the host is publicly resolvable).
+
+vibe-print.local {
+	encode gzip
+	reverse_proxy vibe-print:8080 {
+		header_up X-Forwarded-For {remote_host}
+	}
+}
