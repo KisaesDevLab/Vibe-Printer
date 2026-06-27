@@ -19,6 +19,7 @@ htmlcov/
 # Frontend
 web/node_modules/
 web/dist/
+web/*.tsbuildinfo
 app/static/
 
 # OS

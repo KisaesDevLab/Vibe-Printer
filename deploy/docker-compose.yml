@@ -46,7 +46,8 @@ services:
     depends_on: [vibe-print]
     command: tunnel --no-autoupdate run
     environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env for the cloudflare profile}
+      # Optional at parse time (profile is off by default); required when running the profile.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
 
 volumes:
   vibe-data:
