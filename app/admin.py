@@ -579,23 +579,52 @@ async def heartbeat_test(ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
     return {"sent": sent, "configured": bool(ctx.settings.heartbeat_url), "payload": payload}
 
 
+@router.get("/remote")
+async def get_remote(ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
+    """Resolved remote-access config + live tunnel health (P16.4)."""
+    from .remote import resolve_remote, tunnel_status
+
+    r = resolve_remote(ctx)
+    r["tunnel"] = await tunnel_status(r["cloudflared_metrics_url"])
+    return r
+
+
+@router.put("/remote")
+def put_remote(
+    body: dict[str, Any] = Body(...),
+    ctx: Context = Depends(get_ctx),
+    auth: AuthInfo = Depends(require_auth),
+) -> dict[str, Any]:
+    """Edit remote-access display/enforcement settings (stored in device config)."""
+    from .remote import resolve_remote
+
+    dev = ctx.registry.get_device()
+    config = dict(dev["config"])
+    config["remote_access"] = {
+        "mode": body.get("mode", "lan"),
+        "hostname": body.get("hostname", ""),
+        "access_team_domain": body.get("access_team_domain", ""),
+        "access_aud": body.get("access_aud", ""),
+        "cloudflared_metrics_url": body.get("cloudflared_metrics_url", ""),
+    }
+    ctx.registry.update_device(
+        DeviceUpdate(
+            name=dev["name"], timezone=dev["timezone"], config=config, version=dev["version"]
+        )
+    )
+    ctx.audit.config_change(entity="remote_access", action="update", real_ip=auth.real_ip)
+    return resolve_remote(ctx)
+
+
 @router.get("/remote/status")
 async def remote_status(ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
-    """Tunnel health (P16.4): poll cloudflared /ready. Hostname is display-only (Decision 12)."""
-    import httpx
+    """Back-compat alias returning tunnel + hostname (display-only, Decision 12)."""
+    from .remote import resolve_remote, tunnel_status
 
-    s = ctx.settings
-    result: dict[str, Any] = {
-        "mode": s.remote_access_mode,
-        "hostname": s.remote_hostname,
-        "access_enabled": bool(s.access_team_domain and s.access_aud),
-        "tunnel": "unknown",
+    r = resolve_remote(ctx)
+    return {
+        "mode": r["mode"],
+        "hostname": r["hostname"],
+        "access_enabled": r["access_enabled"],
+        "tunnel": await tunnel_status(r["cloudflared_metrics_url"]),
     }
-    if s.cloudflared_metrics_url:
-        try:
-            async with httpx.AsyncClient(timeout=3.0) as c:
-                r = await c.get(s.cloudflared_metrics_url.rstrip("/") + "/ready")
-            result["tunnel"] = "ready" if r.status_code == 200 else "not_ready"
-        except Exception:
-            result["tunnel"] = "unreachable"
-    return result

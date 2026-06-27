@@ -2288,7 +2288,7 @@
     },
     "/v1/admin/overlays/{oid}/preview": {
       "post": {
-        "description": "Stamp + preview. Accepts inline base_asset/fields/data so the editor previews unsaved edits.",
+        "description": "Stamp + preview; accepts inline base_asset/fields/data for live (unsaved) editor preview.",
         "operationId": "preview_overlay_v1_admin_overlays__oid__preview_post",
         "parameters": [
           {
@@ -2715,9 +2715,71 @@
         "summary": "Provision Status"
       }
     },
+    "/v1/admin/remote": {
+      "get": {
+        "description": "Resolved remote-access config + live tunnel health (P16.4).",
+        "operationId": "get_remote_v1_admin_remote_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Remote V1 Admin Remote Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Remote"
+      },
+      "put": {
+        "description": "Edit remote-access display/enforcement settings (stored in device config).",
+        "operationId": "put_remote_v1_admin_remote_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Remote V1 Admin Remote Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Remote"
+      }
+    },
     "/v1/admin/remote/status": {
       "get": {
-        "description": "Tunnel health (P16.4): poll cloudflared /ready. Hostname is display-only (Decision 12).",
+        "description": "Back-compat alias returning tunnel + hostname (display-only, Decision 12).",
         "operationId": "remote_status_v1_admin_remote_status_get",
         "responses": {
           "200": {

@@ -6,9 +6,10 @@ import { FormatsPage } from "./pages/Formats";
 import { JobsPage } from "./pages/Jobs";
 import { OverlaysPage } from "./pages/Overlays";
 import { PrintersPage } from "./pages/Printers";
+import { RemoteAccessPage } from "./pages/RemoteAccess";
 import { TemplatesPage } from "./pages/Templates";
 
-type Tab = "printers" | "formats" | "templates" | "overlays" | "jobs" | "device";
+type Tab = "printers" | "formats" | "templates" | "overlays" | "jobs" | "remote" | "device";
 
 const TABS: { id: Tab; key: string }[] = [
   { id: "printers", key: "printers" },
@@ -16,6 +17,7 @@ const TABS: { id: Tab; key: string }[] = [
   { id: "templates", key: "templates" },
   { id: "overlays", key: "overlays" },
   { id: "jobs", key: "jobs" },
+  { id: "remote", key: "remote" },
   { id: "device", key: "device" },
 ];
 
@@ -106,6 +108,7 @@ export function App() {
         {tab === "templates" && <TemplatesPage />}
         {tab === "overlays" && <OverlaysPage />}
         {tab === "jobs" && <JobsPage />}
+        {tab === "remote" && <RemoteAccessPage />}
         {tab === "device" && <DevicePage />}
       </main>
     </div>

@@ -446,7 +446,7 @@ export interface paths {
         put?: never;
         /**
          * Preview Overlay
-         * @description Stamp + preview. Accepts inline base_asset/fields/data so the editor previews unsaved edits.
+         * @description Stamp + preview; accepts inline base_asset/fields/data for live (unsaved) editor preview.
          */
         post: operations["preview_overlay_v1_admin_overlays__oid__preview_post"];
         delete?: never;
@@ -580,6 +580,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/remote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Remote
+         * @description Resolved remote-access config + live tunnel health (P16.4).
+         */
+        get: operations["get_remote_v1_admin_remote_get"];
+        /**
+         * Put Remote
+         * @description Edit remote-access display/enforcement settings (stored in device config).
+         */
+        put: operations["put_remote_v1_admin_remote_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/remote/status": {
         parameters: {
             query?: never;
@@ -589,7 +613,7 @@ export interface paths {
         };
         /**
          * Remote Status
-         * @description Tunnel health (P16.4): poll cloudflared /ready. Hostname is display-only (Decision 12).
+         * @description Back-compat alias returning tunnel + hostname (display-only, Decision 12).
          */
         get: operations["remote_status_v1_admin_remote_status_get"];
         put?: never;
@@ -2701,6 +2725,65 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    get_remote_v1_admin_remote_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    put_remote_v1_admin_remote_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

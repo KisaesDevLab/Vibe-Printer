@@ -37,14 +37,16 @@ def require_auth(request: Request, ctx: Context = Depends(get_ctx)) -> AuthInfo:
 
 def require_access(request: Request, ctx: Context = Depends(get_ctx)) -> str | None:
     """Enforce Cloudflare Access on admin routes when configured (P12.5). No-op otherwise."""
-    s = ctx.settings
-    if not (s.access_team_domain and s.access_aud):
+    from .remote import resolve_remote
+
+    r = resolve_remote(ctx)
+    if not r["access_enabled"]:
         return None
     token = request.headers.get("Cf-Access-Jwt-Assertion")
     if not token:
         raise ApiError("forbidden", "missing Cloudflare Access assertion", status=403)
     from .access import verify_access_token
 
-    identity = verify_access_token(token, s.access_team_domain, s.access_aud)
+    identity = verify_access_token(token, r["access_team_domain"], r["access_aud"])
     request.state.access_identity = identity
     return identity
