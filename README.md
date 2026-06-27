@@ -51,9 +51,11 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
 
 ## Features
 
-- **Six printer types:** `escpos_network` (TCP :9100), `escpos_usb`, `cups` (office/PDF),
+- **Printer types:** `escpos_network` (TCP :9100), `escpos_usb`, `cups` (office via in-container
+  CUPS), `ipp_network` (**direct IPP** — no CUPS queue; "reachable" is a real IPP query),
   `zpl_network` (Zebra labels), `star_network` (Star Line Mode), `virtual` (dev/test), plus
-  `pool` (failover / round-robin).
+  `pool` (failover / round-robin). CUPS device URIs **auto-(re)provision on startup** (durable
+  across rebuilds); a **Provision** button is in the Printers tab.
 - **Office documents:** render from HTML/CSS templates, **overlay variables onto an uploaded base
   PDF** (visual drag-and-drop editor; text/QR/image fields), **or** print finished **PDF /
   PostScript / PCL** files directly (`/v1/print/file`).

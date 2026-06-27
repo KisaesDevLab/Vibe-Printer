@@ -60,9 +60,9 @@ def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
             "resolved_version": ov["version"],
         }
 
-    if printer.type == "cups":
+    if printer.type in ("cups", "ipp_network"):
         if req.document or req.format:
-            raise ApiError("unsupported_for_printer", "CUPS printers use a PDF template")
+            raise ApiError("unsupported_for_printer", "office printers use a PDF template")
         template_id = template_id or printer.default_template_id
         if not template_id:
             raise ApiError("validation_error", "no template and printer has no default template")

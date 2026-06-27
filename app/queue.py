@@ -486,7 +486,7 @@ class Worker:
 
         caps = self.ctx.backend_capabilities(printer)
 
-        if printer.type == "cups":
+        if printer.type in ("cups", "ipp_network"):
             template = self._template(job, payload)
             pdf = render_pdf(
                 template["html"],

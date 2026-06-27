@@ -42,6 +42,21 @@ class CupsParams(BaseModel):
     type: Literal["cups"] = "cups"
     queue: str
     media: str | None = None
+    # Stored so the queue can be auto-(re)provisioned on startup (durable across rebuilds).
+    device_uri: str | None = None
+    make_model: str = "everywhere"
+
+
+class IppNetworkParams(BaseModel):
+    """Direct IPP (no CUPS) — point at a network printer's IPP endpoint and send PDF."""
+
+    type: Literal["ipp_network"] = "ipp_network"
+    host: str
+    port: int = 631
+    uri_path: str = "/ipp/print"
+    tls: bool = False
+    media: str | None = None
+    uri: str | None = None  # full override; otherwise built from host/port/uri_path
 
 
 class VirtualParams(BaseModel):
@@ -78,6 +93,7 @@ PrinterParams = Annotated[
     EscposNetworkParams
     | EscposUsbParams
     | CupsParams
+    | IppNetworkParams
     | VirtualParams
     | ZplNetworkParams
     | StarNetworkParams

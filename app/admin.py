@@ -109,11 +109,16 @@ def provision_queue(
     device_uri = body.get("device_uri")
     if not device_uri:
         raise ApiError("validation_error", "device_uri is required (e.g. ipp://printer.local/ipp/print)")
+    make_model = body.get("make_model", "everywhere")
     backend = make_backend(printer, data_dir=ctx.settings.data_dir)
     try:
-        backend.provision_queue(device_uri, make_model=body.get("make_model", "everywhere"))  # type: ignore[attr-defined]
+        backend.provision_queue(device_uri, make_model=make_model)  # type: ignore[attr-defined]
     except BackendError as e:
         raise ApiError("printer_unreachable", str(e)) from e
+    # Persist so the queue is auto-re-provisioned on startup (durable across rebuilds).
+    ctx.registry.update_printer_params(
+        printer_id, {"device_uri": device_uri, "make_model": make_model}
+    )
     ctx.audit.config_change(
         entity="printer", entity_id=str(printer_id), action="provision_queue", real_ip=auth.real_ip
     )
@@ -127,7 +132,7 @@ def test_print(printer_id: int, ctx: Context = Depends(get_ctx)) -> dict[str, An
     printer = ctx.registry.get_printer(printer_id)
     ts = utcnow_iso()
 
-    if printer.type == "cups":
+    if printer.type in ("cups", "ipp_network"):
         # Office printers get a one-page PDF test (rendered with reportlab; no template needed).
         import base64
         import io

@@ -50,6 +50,8 @@ architecture decisions (see bottom). QA: **73 tests passing + 1 skipped**, ruff 
 | Compliance | Encryption at rest | SQLCipher wiring (Linux wheels in image; key-bind + wrong-key rejection) |
 | CUPS | Queue provisioning | `POST /v1/admin/printers/{id}/provision-queue` (driverless IPP Everywhere) |
 | CUPS | Document passthrough | `POST /v1/print/file` prints finished PDF / PostScript / PCL (PDF/PS auto-filtered, PCL raw); `capabilities.document_formats` advertises support |
+| Office | Direct IPP backend | `ipp_network` type — minimal IPP client (httpx) sends PDF straight to a printer's IPP endpoint; status is a real Get-Printer-Attributes query (no CUPS queue) |
+| Office | Durable CUPS provisioning | device_uri persisted on the printer; queue auto-(re)provisioned on startup (survives rebuilds); UI Provision button + status tooltip |
 | Office | PDF overlay templates | upload a base PDF + **WYSIWYG** drag-and-drop editor (pdf.js): fields render in place at real font/size/color/alignment with live QR images; bound to `data`, stamped at print time (reportlab + pypdf). `overlay` on `/v1/print`, admin `/overlays` CRUD + preview |
 | UI | Visual element builder | drag-reorder ESC/POS element builder + per-type editors, two-way JSON sync |
 | UI | i18n | en/es with language switcher |

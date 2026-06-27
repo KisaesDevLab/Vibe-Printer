@@ -10,6 +10,7 @@ from .base import PrinterBackend
 from .cups import CupsBackend
 from .escpos_network import EscposNetworkBackend
 from .escpos_usb import EscposUsbBackend
+from .ipp_network import IppNetworkBackend
 from .star_network import StarNetworkBackend
 from .virtual import VirtualBackend
 from .zpl_network import ZplNetworkBackend
@@ -25,6 +26,8 @@ def make_backend(printer: PrinterRead, *, data_dir: Path) -> PrinterBackend:
         return EscposUsbBackend(printer.id, params)
     if printer.type == "cups":
         return CupsBackend(printer.id, params)
+    if printer.type == "ipp_network":
+        return IppNetworkBackend(printer.id, params)
     if printer.type == "zpl_network":
         return ZplNetworkBackend(printer.id, params)
     if printer.type == "star_network":

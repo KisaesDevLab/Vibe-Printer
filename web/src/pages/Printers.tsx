@@ -15,8 +15,9 @@ function ReachBadge({ id }: { id: number }) {
     refetchInterval: 15000,
   });
   if (!data) return <span className="badge">checking…</span>;
+  const detail = (data.errors && data.errors.length ? data.errors.join(", ") : data.state) || "";
   return (
-    <span className={`badge ${data.reachable ? "ok" : "err"}`}>
+    <span className={`badge ${data.reachable ? "ok" : "err"}`} title={detail}>
       {data.reachable ? "reachable" : "offline"}
     </span>
   );
@@ -28,6 +29,7 @@ const EMPTY = {
   host: "",
   port: 9100,
   queue: "",
+  device_uri: "",
   vendor_id: "",
   product_id: "",
   columns: 48,
@@ -89,6 +91,20 @@ export function PrintersPage() {
     onError: (e: Error) => setToast(`Test failed: ${e.message}`),
   });
 
+  const provision = useMutation({
+    mutationFn: (p: Printer) => {
+      const uri = p.params.device_uri as string | undefined;
+      if (!uri) throw new Error("Set a Device URI first (Edit the printer)");
+      return api.post(`/v1/admin/printers/${p.id}/provision-queue`, { device_uri: uri });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["printers"] });
+      setToast("Queue provisioned — status will refresh shortly");
+      setTimeout(() => setToast(""), 5000);
+    },
+    onError: (e: Error) => setToast(`Provision failed: ${e.message}`),
+  });
+
   function startEdit(p: Printer) {
     setEditing(p);
     setErr("");
@@ -99,6 +115,7 @@ export function PrintersPage() {
       host: String(p.params.host ?? ""),
       port: Number(p.params.port ?? 9100),
       queue: String(p.params.queue ?? ""),
+      device_uri: String(p.params.device_uri ?? ""),
       vendor_id: p.params.vendor_id ? Number(p.params.vendor_id).toString(16) : "",
       product_id: p.params.product_id ? Number(p.params.product_id).toString(16) : "",
       columns: Number(p.params.columns ?? 48),
@@ -151,6 +168,12 @@ export function PrintersPage() {
                     <button className="ghost" onClick={() => test.mutate(p.id)}>
                       Test
                     </button>
+                    {p.type === "cups" && (
+                      <button className="ghost" onClick={() => provision.mutate(p)}
+                              title="Create/refresh the CUPS queue from the device URI">
+                        Provision
+                      </button>
+                    )}
                     <button className="ghost" onClick={() => startEdit(p)}>
                       Edit
                     </button>
@@ -234,10 +257,31 @@ export function PrintersPage() {
                 />
               </>
             )}
+            {form.type === "ipp_network" && (
+              <>
+                <label>Host / IP</label>
+                <input value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} />
+                <label>Port</label>
+                <input
+                  type="number"
+                  value={form.port}
+                  onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
+                />
+                <p className="muted" style={{ fontSize: 12 }}>
+                  Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
+                </p>
+              </>
+            )}
             {form.type === "cups" && (
               <>
-                <label>Queue</label>
+                <label>Queue name</label>
                 <input value={form.queue} onChange={(e) => setForm({ ...form, queue: e.target.value })} />
+                <label>Device URI (auto-provisions the queue; persists across rebuilds)</label>
+                <input
+                  value={form.device_uri}
+                  onChange={(e) => setForm({ ...form, device_uri: e.target.value })}
+                  placeholder="ipp://192.168.1.50/ipp/print"
+                />
               </>
             )}
             {form.type !== "cups" && (
@@ -291,7 +335,7 @@ export function PrintersPage() {
 }
 
 function typeOptions(editing: Printer | null): string[] {
-  const base = ["virtual", "escpos_network", "escpos_usb", "cups"];
+  const base = ["virtual", "escpos_network", "escpos_usb", "cups", "ipp_network"];
   if (editing && !base.includes(editing.type)) base.push(editing.type);
   return base;
 }
@@ -391,7 +435,9 @@ function buildBody(form: typeof EMPTY) {
   if (form.type === "escpos_network") params = { ...params, host: form.host, port: form.port, columns: form.columns };
   if (form.type === "escpos_usb")
     params = { ...params, vendor_id: parseInt(form.vendor_id, 16), product_id: parseInt(form.product_id, 16) };
-  if (form.type === "cups") params = { ...params, queue: form.queue };
+  if (form.type === "cups")
+    params = { ...params, queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}) };
+  if (form.type === "ipp_network") params = { ...params, host: form.host, port: form.port };
   if (form.type === "virtual") params = { ...params, columns: form.columns };
   return { name: form.name, params, allow_raw: form.allow_raw };
 }
@@ -409,7 +455,14 @@ function buildEditBody(form: typeof EMPTY, original: Printer) {
     params.vendor_id = parseInt(form.vendor_id, 16);
     params.product_id = parseInt(form.product_id, 16);
   }
-  if (form.type === "cups") params.queue = form.queue;
+  if (form.type === "cups") {
+    params.queue = form.queue;
+    if (form.device_uri) params.device_uri = form.device_uri;
+  }
+  if (form.type === "ipp_network") {
+    params.host = form.host;
+    params.port = form.port;
+  }
   if (form.type === "virtual") params.columns = form.columns;
   return {
     name: form.name,

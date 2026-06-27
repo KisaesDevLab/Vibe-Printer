@@ -44,6 +44,25 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return resp
 
 
+def _reprovision_cups(ctx: Any) -> None:
+    """Re-create CUPS queues from the DB on startup so they survive container rebuilds
+    (CUPS state in /etc/cups is ephemeral; the DB is the source of truth)."""
+    from .backends.base import BackendError
+    from .backends.factory import make_backend
+
+    for p in ctx.registry.list_printers():
+        if p.type != "cups" or not p.params.get("device_uri"):
+            continue
+        try:
+            backend = make_backend(p, data_dir=ctx.settings.data_dir)
+            backend.provision_queue(  # type: ignore[attr-defined]
+                p.params["device_uri"], make_model=p.params.get("make_model", "everywhere")
+            )
+            log.info("cups_reprovisioned", printer=p.id, queue=p.params.get("queue"))
+        except (BackendError, Exception) as e:  # best-effort
+            log.warning("cups_reprovision_failed", printer=p.id, error=str(e))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
@@ -59,6 +78,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ctx.worker = worker
     app.state.ctx = ctx
     worker.start()
+    _reprovision_cups(ctx)
     log.info("startup", data_dir=str(settings.data_dir))
     try:
         yield

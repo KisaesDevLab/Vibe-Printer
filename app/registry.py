@@ -133,6 +133,19 @@ class Registry:
         self.db.execute("DELETE FROM printers WHERE id=?", (printer_id,))
         self._invalidate()
 
+    def update_printer_params(self, printer_id: int, patch: dict[str, Any]) -> None:
+        """Merge fields into a printer's params (no version bump) — used to persist a CUPS
+        device_uri after provisioning so the queue can be re-created on startup."""
+        row = self.db.query_one("SELECT params_json FROM printers WHERE id=?", (printer_id,))
+        if row is None:
+            raise ApiError("unknown_printer", f"No printer with id {printer_id}")
+        params = _loads(row["params_json"], {})
+        params.update(patch)
+        self.db.execute(
+            "UPDATE printers SET params_json=? WHERE id=?", (json.dumps(params), printer_id)
+        )
+        self._invalidate()
+
     # ------------------------------------------------------------------ formats
     def list_formats(self) -> list[dict[str, Any]]:
         return [self._format_row(r) for r in self.db.query("SELECT * FROM formats ORDER BY id")]

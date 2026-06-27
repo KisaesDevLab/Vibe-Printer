@@ -873,6 +873,13 @@ export interface components {
         };
         /** CupsParams */
         CupsParams: {
+            /** Device Uri */
+            device_uri?: string | null;
+            /**
+             * Make Model
+             * @default everywhere
+             */
+            make_model: string;
             /** Media */
             media?: string | null;
             /** Queue */
@@ -1044,6 +1051,38 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * IppNetworkParams
+         * @description Direct IPP (no CUPS) — point at a network printer's IPP endpoint and send PDF.
+         */
+        IppNetworkParams: {
+            /** Host */
+            host: string;
+            /** Media */
+            media?: string | null;
+            /**
+             * Port
+             * @default 631
+             */
+            port: number;
+            /**
+             * Tls
+             * @default false
+             */
+            tls: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "ipp_network";
+            /** Uri */
+            uri?: string | null;
+            /**
+             * Uri Path
+             * @default /ipp/print
+             */
+            uri_path: string;
         };
         /** OverlayCreate */
         OverlayCreate: {
@@ -1220,7 +1259,7 @@ export interface components {
             /** Name */
             name: string;
             /** Params */
-            params: components["schemas"]["EscposNetworkParams"] | components["schemas"]["EscposUsbParams"] | components["schemas"]["CupsParams"] | components["schemas"]["VirtualParams"] | components["schemas"]["ZplNetworkParams"] | components["schemas"]["StarNetworkParams"] | components["schemas"]["PoolParams"];
+            params: components["schemas"]["EscposNetworkParams"] | components["schemas"]["EscposUsbParams"] | components["schemas"]["CupsParams"] | components["schemas"]["IppNetworkParams"] | components["schemas"]["VirtualParams"] | components["schemas"]["ZplNetworkParams"] | components["schemas"]["StarNetworkParams"] | components["schemas"]["PoolParams"];
         };
         /** PrinterUpdate */
         PrinterUpdate: {
@@ -1236,7 +1275,7 @@ export interface components {
             /** Name */
             name: string;
             /** Params */
-            params: components["schemas"]["EscposNetworkParams"] | components["schemas"]["EscposUsbParams"] | components["schemas"]["CupsParams"] | components["schemas"]["VirtualParams"] | components["schemas"]["ZplNetworkParams"] | components["schemas"]["StarNetworkParams"] | components["schemas"]["PoolParams"];
+            params: components["schemas"]["EscposNetworkParams"] | components["schemas"]["EscposUsbParams"] | components["schemas"]["CupsParams"] | components["schemas"]["IppNetworkParams"] | components["schemas"]["VirtualParams"] | components["schemas"]["ZplNetworkParams"] | components["schemas"]["StarNetworkParams"] | components["schemas"]["PoolParams"];
             /** Version */
             version: number;
         };

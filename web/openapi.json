@@ -22,6 +22,22 @@
       },
       "CupsParams": {
         "properties": {
+          "device_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Uri"
+          },
+          "make_model": {
+            "default": "everywhere",
+            "title": "Make Model",
+            "type": "string"
+          },
           "media": {
             "anyOf": [
               {
@@ -342,6 +358,63 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IppNetworkParams": {
+        "description": "Direct IPP (no CUPS) \u2014 point at a network printer's IPP endpoint and send PDF.",
+        "properties": {
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "media": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media"
+          },
+          "port": {
+            "default": 631,
+            "title": "Port",
+            "type": "integer"
+          },
+          "tls": {
+            "default": false,
+            "title": "Tls",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "ipp_network",
+            "default": "ipp_network",
+            "title": "Type",
+            "type": "string"
+          },
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uri"
+          },
+          "uri_path": {
+            "default": "/ipp/print",
+            "title": "Uri Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host"
+        ],
+        "title": "IppNetworkParams",
         "type": "object"
       },
       "OverlayCreate": {
@@ -760,6 +833,7 @@
                 "cups": "#/components/schemas/CupsParams",
                 "escpos_network": "#/components/schemas/EscposNetworkParams",
                 "escpos_usb": "#/components/schemas/EscposUsbParams",
+                "ipp_network": "#/components/schemas/IppNetworkParams",
                 "pool": "#/components/schemas/PoolParams",
                 "star_network": "#/components/schemas/StarNetworkParams",
                 "virtual": "#/components/schemas/VirtualParams",
@@ -776,6 +850,9 @@
               },
               {
                 "$ref": "#/components/schemas/CupsParams"
+              },
+              {
+                "$ref": "#/components/schemas/IppNetworkParams"
               },
               {
                 "$ref": "#/components/schemas/VirtualParams"
@@ -839,6 +916,7 @@
                 "cups": "#/components/schemas/CupsParams",
                 "escpos_network": "#/components/schemas/EscposNetworkParams",
                 "escpos_usb": "#/components/schemas/EscposUsbParams",
+                "ipp_network": "#/components/schemas/IppNetworkParams",
                 "pool": "#/components/schemas/PoolParams",
                 "star_network": "#/components/schemas/StarNetworkParams",
                 "virtual": "#/components/schemas/VirtualParams",
@@ -855,6 +933,9 @@
               },
               {
                 "$ref": "#/components/schemas/CupsParams"
+              },
+              {
+                "$ref": "#/components/schemas/IppNetworkParams"
               },
               {
                 "$ref": "#/components/schemas/VirtualParams"
