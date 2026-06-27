@@ -20,6 +20,22 @@ test("unlock, navigate, author a format, and see a live preview", async ({ page 
   await expect(page.locator("img.preview")).toBeVisible({ timeout: 10_000 });
 });
 
+test("PDF overlay editor renders a placed field (WYSIWYG)", async ({ page }) => {
+  await page.goto("/admin/");
+  await page.getByPlaceholder("VIBE_PRINT_SECRET").fill(SECRET);
+  await page.getByRole("button", { name: "Unlock" }).click();
+  await expect(page.getByRole("heading", { name: "Printers", exact: true })).toBeVisible();
+
+  await page.getByText("PDF Overlays").click();
+  await page.setInputFiles('input[type="file"]', "e2e/fixtures/base.pdf");
+
+  // The base PDF renders to a canvas...
+  await expect(page.locator("canvas")).toBeVisible({ timeout: 10_000 });
+  // ...and adding a text field shows the resolved value in place on the page.
+  await page.getByRole("button", { name: "+ Text" }).click();
+  await expect(page.getByText("‹name›")).toBeVisible();
+});
+
 test("locking returns to the secret gate", async ({ page }) => {
   await page.goto("/admin/");
   await page.getByPlaceholder("VIBE_PRINT_SECRET").fill(SECRET);

@@ -2,11 +2,46 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as pdfjs from "pdfjs-dist";
 // @ts-expect-error Vite worker import
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
+import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { api, Overlay, OverlayField } from "../api";
 import { CodeEditor } from "../components/CodeEditor";
 
 pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker();
+
+const FONT_CSS: Record<string, string> = {
+  Helvetica: "Helvetica, Arial, sans-serif",
+  "Helvetica-Bold": "Helvetica, Arial, sans-serif",
+  "Times-Roman": "'Times New Roman', Times, serif",
+  Courier: "'Courier New', Courier, monospace",
+};
+
+// Lightweight {{ data.x.y }} substitution for the on-canvas preview (the server does the real
+// Jinja render for the actual PDF).
+function resolveValue(value: string, sample: Record<string, unknown>): string {
+  return (value || "").replace(/\{\{\s*data\.([\w.]+)\s*\}\}/g, (_m, path: string) => {
+    let cur: unknown = sample;
+    for (const part of path.split(".")) {
+      if (cur && typeof cur === "object" && part in (cur as Record<string, unknown>)) {
+        cur = (cur as Record<string, unknown>)[part];
+      } else {
+        return `‹${path}›`;
+      }
+    }
+    return cur == null ? "" : String(cur);
+  });
+}
+
+function QrImg({ value, px }: { value: string; px: number }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(value || " ", { margin: 0 }).then((d) => alive && setSrc(d)).catch(() => {});
+    return () => { alive = false; };
+  }, [value]);
+  return src ? <img src={src} width={px} height={px} alt="qr" style={{ display: "block" }} /> :
+    <div style={{ width: px, height: px, background: "#ccc" }} />;
+}
 
 const TARGET_W = 560; // canvas render width in CSS px
 
@@ -92,7 +127,16 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const docRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
-  const dragRef = useRef<{ i: number; offX: number; offY: number } | null>(null);
+  const dragRef = useRef<
+    { i: number; startXpx: number; startYpx: number; cx: number; cy: number } | null
+  >(null);
+
+  let sampleObj: Record<string, unknown> = {};
+  try {
+    sampleObj = JSON.parse(sample);
+  } catch {
+    sampleObj = {};
+  }
 
   // Load the base PDF once.
   useEffect(() => {
@@ -143,22 +187,22 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
     setSel(null);
   };
 
-  // Pointer drag on a chip → update field x/y in PDF points (top-left origin).
+  // Delta-based pointer drag (robust to alignment transforms). Updates x/y in PDF points.
   function onChipDown(e: React.PointerEvent, i: number) {
     e.preventDefault();
     setSel(i);
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    dragRef.current = { i, offX: e.clientX - rect.left, offY: e.clientY - rect.top };
+    const f = fields[i];
+    dragRef.current = {
+      i, startXpx: (f.x ?? 0) * scale, startYpx: (f.y ?? 0) * scale, cx: e.clientX, cy: e.clientY,
+    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
   }
   function onMove(e: PointerEvent) {
     const d = dragRef.current;
-    const canvas = canvasRef.current;
-    if (!d || !canvas) return;
-    const box = canvas.getBoundingClientRect();
-    const leftPx = Math.max(0, Math.min(dims.w, e.clientX - box.left - d.offX));
-    const topPx = Math.max(0, Math.min(dims.h, e.clientY - box.top - d.offY));
+    if (!d) return;
+    const leftPx = Math.max(0, Math.min(dims.w, d.startXpx + (e.clientX - d.cx)));
+    const topPx = Math.max(0, Math.min(dims.h, d.startYpx + (e.clientY - d.cy)));
     update(d.i, { x: Math.round(leftPx / scale), y: Math.round(topPx / scale) });
   }
   function onUp() {
@@ -213,28 +257,52 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
         <div style={{ position: "relative", width: dims.w }}>
           <canvas ref={canvasRef} style={{ border: "1px solid var(--border)", width: dims.w }} />
           <div style={{ position: "absolute", top: 0, left: 0, width: dims.w, height: dims.h }}>
-            {pageFields.map(({ f, i }) => (
-              <div
-                key={i}
-                onPointerDown={(e) => onChipDown(e, i)}
-                style={{
-                  position: "absolute",
-                  left: (f.x ?? 0) * scale,
-                  top: (f.y ?? 0) * scale,
-                  padding: "1px 4px",
-                  fontSize: 11,
-                  background: sel === i ? "var(--accent)" : "rgba(79,140,255,0.7)",
-                  color: "white",
-                  borderRadius: 3,
-                  cursor: "grab",
-                  whiteSpace: "nowrap",
-                  userSelect: "none",
-                }}
-                title="drag to position"
-              >
-                {f.type === "image" ? `🖼 ${f.asset}` : f.type === "qr" ? `▦ ${f.value}` : `T ${f.value}`}
-              </div>
-            ))}
+            {pageFields.map(({ f, i }) => {
+              const box = (f.size ?? 72) * scale;
+              const align = f.align ?? "left";
+              const transform =
+                align === "right" ? "translateX(-100%)" : align === "center" ? "translateX(-50%)" : "";
+              const selected = sel === i;
+              const common: React.CSSProperties = {
+                position: "absolute",
+                left: (f.x ?? 0) * scale,
+                top: (f.y ?? 0) * scale,
+                transform,
+                cursor: "grab",
+                userSelect: "none",
+                outline: selected ? "2px solid var(--accent)" : "1px dashed rgba(79,140,255,0.6)",
+                outlineOffset: 1,
+              };
+              return (
+                <div key={i} onPointerDown={(e) => onChipDown(e, i)} style={common}
+                     title="drag to position">
+                  {f.type === "text" && (
+                    <span style={{
+                      fontSize: (f.size ?? 12) * scale,
+                      fontFamily: FONT_CSS[f.font ?? "Helvetica"] ?? "sans-serif",
+                      color: f.color ?? "#000",
+                      lineHeight: 1,
+                      whiteSpace: "nowrap",
+                      display: "inline-block",
+                    }}>
+                      {resolveValue(f.value ?? "", sampleObj) || "text"}
+                    </span>
+                  )}
+                  {f.type === "qr" && <QrImg value={resolveValue(f.value ?? "", sampleObj)} px={box} />}
+                  {f.type === "image" && (
+                    <div style={{
+                      width: (f.width ?? f.size ?? 72) * scale,
+                      height: (f.height ?? f.width ?? f.size ?? 72) * scale,
+                      background: "rgba(0,0,0,0.06)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, color: "var(--muted)", textAlign: "center", overflow: "hidden",
+                    }}>
+                      🖼 {f.asset}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
