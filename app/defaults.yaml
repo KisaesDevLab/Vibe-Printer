@@ -258,23 +258,23 @@ templates:
     size: Letter
     margins: 0.5in
   sample_data:
-    business_name: The CPA Group, PC
-    business_address: '217 Fourth Street, PO Box 68
+    business_name: Northwind Tax & Advisory, PC
+    business_address: '100 Example Avenue, Suite 200
 
-      Monett, MO 65708
+      Springfield, ST 00000
 
-      866-991-1272  •  www.cpa2web.com'
-    client_id: DIEC6130
-    client_name: Timothy P & Barbara Dieckhoff
-    client_address: '109 Main St
+      (555) 010-0000  •  www.example-cpa.test'
+    client_id: SAMP0001
+    client_name: Pat & Jordan Sample
+    client_address: '42 Placeholder Lane
 
-      Monett, MO  65708'
-    invoice_number: '2000166095'
-    invoice_date: 12/10/2025
+      Springfield, ST 00000'
+    invoice_number: '2000000001'
+    invoice_date: 01/15/2026
     due_terms: Due Upon Receipt
-    billing_name: Timothy & Barbara Dieckhoff
+    billing_name: Pat & Jordan Sample
     line_items:
-    - description: For services provided in compilation of financial statements as of 11/30/2025
+    - description: For professional services rendered (sample)
       amount: $350.00
     subtotal: $350.00
     surcharges:
@@ -284,5 +284,5 @@ templates:
       amount: '28.71'
     total: $392.71
     dunning: Your account is past due. A 1.5% monthly interest charge applies to balances over 30 days.
-    invoice_footer: '<strong>PLEASE MAIL PAYMENTS TO:</strong> The CPA Group, PC, PO Box 68, Monett, MO 65708<br>EIN: 43-1797482<br><span class=''terms''>Thank you for your business. Payment is due upon
-      presentation of this invoice.</span>'
+    invoice_footer: '<strong>PLEASE MAIL PAYMENTS TO:</strong> Northwind Tax & Advisory, PC, PO Box 1, Springfield, ST 00000<br>EIN: 00-0000000<br><span class=''terms''>Thank you for your business. Payment
+      is due upon presentation of this invoice.</span>'

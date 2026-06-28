@@ -60,20 +60,31 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
 - **Office documents:** render from HTML/CSS templates, **overlay variables onto an uploaded base
   PDF** (visual drag-and-drop editor; text/QR/image fields), **or** print finished **PDF /
   PostScript / PCL** files directly (`/v1/print/file`).
+- **Cash drawer:** `pulse` element (configurable pin 2/5 + on/off timing) or a one-click
+  **Open drawer** action (`/v1/admin/printers/{id}/open-drawer`) on ESC/POS & Star printers.
 - **Reliable delivery:** durable SQLite queue, **per-printer serialization** (no interleaved
   receipts), **idempotency keys**, retry with backoff, and **mid-send → `uncertain`** (never
   auto-reprints a financial receipt).
 - **Templating:** sandboxed Jinja2 over a JSON element schema (thermal) and HTML/CSS → PDF via
   WeasyPrint (office). Server-rendered previews (PNG/PDF). QR / barcode / image / tables.
 - **Scheduling:** job `priority`, not-before `scheduled_at`, per-printer **daily quotas**.
-- **Admin UI:** secret-gated SPA at `/admin` — printers, a drag-reorder **visual element builder**,
-  PDF template editor with live preview, jobs dashboard, device settings, backup/restore. English + Spanish.
+- **Admin UI:** secret-gated SPA at `/admin` — Printers, Document Formats (drag-reorder **visual
+  element builder**), PDF Templates, **PDF Overlays** (pdf.js WYSIWYG), Jobs, **Remote Access**,
+  Device. Each content type supports **edit / delete / test-print to a chosen printer** with live
+  previews. English + Spanish.
+- **Ships with defaults:** bundled formats/templates (Stripe receipt, File Routing Sheet, Invoice)
+  loaded **create-if-missing** on startup so a fresh appliance is usable immediately.
+- **Remote access from the UI:** run a **Cloudflare Tunnel** as a managed process — **quick** mode
+  (instant `*.trycloudflare.com` URL, no account) or **named** (token for a stable hostname);
+  LAN + Cloudflare work **at the same time**; optional **Cloudflare Access** JWT enforced only on
+  tunnelled requests. Also Caddy LAN-TLS and Tailscale.
 - **Security & compliance:** shared-secret bearer auth, optional **Cloudflare Access** JWT, strict
   CSP, WeasyPrint SSRF lockdown, **tamper-evident hash-chained audit**, optional **SQLCipher at
   rest**, payload-hash PII mode, log redaction, configurable retention.
 - **Operations:** signed failure/offline **webhooks**, fleet **heartbeat** + diagnostics bundle,
   Prometheus `/metrics`, LAN **discovery**, first-boot **provisioning**, safe **self-update** with
   rollback, and **B2 backup/restore**.
+- **Packaged image:** multi-arch (amd64 + arm64) published to **GHCR** — `ghcr.io/kisaesdevlab/vibe-printer`.
 
 ---
 
@@ -126,11 +137,20 @@ Docker on stock Ubuntu 24.04.
 ```bash
 cd deploy
 cp .env.example .env          # set a UNIQUE VIBE_PRINT_SECRET per appliance
-docker compose up -d --build
+docker compose up -d --build  # build locally; or pull the published image (below)
 ```
 
-The image bundles WeasyPrint (pango/cairo), fonts, libusb, and an in-container CUPS (bound to
-localhost). Data lives in the `vibe-data` volume (`/data`: SQLite DB + assets + backups).
+**Or pull the prebuilt multi-arch image from GHCR** (no local build) — set
+`VIBE_PRINT_IMAGE` and skip `--build`:
+
+```bash
+VIBE_PRINT_IMAGE=ghcr.io/kisaesdevlab/vibe-printer:v0.1.0 docker compose up -d
+# tags: :latest (amd64, every main push) · :vX.Y.Z (amd64+arm64, on release tags) · :<sha>
+```
+
+The image bundles WeasyPrint (pango/cairo), fonts, libusb, an in-container CUPS (localhost), and
+`cloudflared` (for the UI-managed tunnel). Data lives in the `vibe-data` volume (`/data`: SQLite DB
++ assets + backups), so it persists across upgrades.
 
 Compose **profiles**:
 
@@ -404,7 +424,7 @@ operator action (resolve / requeue) in the UI or via the admin API.
 | Config | `POST /config/export`, `POST /config/import` (`dry_run`) |
 | Audit | `GET /audit/config`, `GET /audit/print`, `GET /audit/verify` (hash chain) |
 | Retention/backup | `POST /retention/prune`, `POST /backup/snapshot` |
-| Fleet/remote | `GET /diagnostics`, `POST /heartbeat/test`, `GET /remote/status` |
+| Fleet/remote | `GET /diagnostics`, `POST /heartbeat/test`, `GET/PUT /remote`, `GET /remote/status`, `POST /remote/tunnel/{start\|stop}` |
 | Provisioning | `GET /provision/status`, `POST /provision` |
 
 Writes use **optimistic concurrency** — include the resource's `version`; a stale write returns `409`.
@@ -682,11 +702,12 @@ frontend build, and Playwright e2e.
 
 ## Project status
 
-The full master plan is implemented and tested (79 tests, ruff + mypy clean, e2e verified). Two
-items from the plan's "consciously deferred" list are intentionally **out of scope** because they
-contradict the appliance's locked design (single shared secret; single-process SQLite): **multi-tenant
-isolation** and **HA / multi-node**. Both would require a different architecture (per-tenant auth /
-Postgres + distributed coordination). See `STATUS.md`.
+The full master plan is implemented and tested (120+ tests, ruff + mypy clean, Playwright e2e
+verified, CI green). First multi-arch release **`v0.1.0`** is published to GHCR. Two items from the
+plan's "consciously deferred" list are intentionally **out of scope** because they contradict the
+appliance's locked design (single shared secret; single-process SQLite): **multi-tenant isolation**
+and **HA / multi-node** — both would need a different architecture (per-tenant auth / Postgres +
+distributed coordination). See `STATUS.md`.
 
 ---
 
