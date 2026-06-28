@@ -33,6 +33,8 @@ const EMPTY = {
   vendor_id: "",
   product_id: "",
   columns: 48,
+  members: "",
+  strategy: "failover",
   allow_raw: false,
 };
 
@@ -128,6 +130,8 @@ export function PrintersPage() {
       vendor_id: p.params.vendor_id ? Number(p.params.vendor_id).toString(16) : "",
       product_id: p.params.product_id ? Number(p.params.product_id).toString(16) : "",
       columns: Number(p.params.columns ?? 48),
+      members: Array.isArray(p.params.members) ? (p.params.members as number[]).join(", ") : "",
+      strategy: String(p.params.strategy ?? "failover"),
       allow_raw: p.allow_raw,
     });
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
@@ -272,7 +276,8 @@ export function PrintersPage() {
                 />
               </>
             )}
-            {form.type === "ipp_network" && (
+            {(form.type === "ipp_network" || form.type === "zpl_network" ||
+              form.type === "star_network") && (
               <>
                 <label>Host / IP</label>
                 <input value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} />
@@ -282,9 +287,26 @@ export function PrintersPage() {
                   value={form.port}
                   onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
                 />
-                <p className="muted" style={{ fontSize: 12 }}>
-                  Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
-                </p>
+                {form.type === "ipp_network" && (
+                  <p className="muted" style={{ fontSize: 12 }}>
+                    Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
+                  </p>
+                )}
+              </>
+            )}
+            {form.type === "pool" && (
+              <>
+                <label>Member printer IDs (comma-separated)</label>
+                <input
+                  value={form.members}
+                  onChange={(e) => setForm({ ...form, members: e.target.value })}
+                  placeholder="2, 3"
+                />
+                <label>Strategy</label>
+                <select value={form.strategy} onChange={(e) => setForm({ ...form, strategy: e.target.value })}>
+                  <option value="failover">failover</option>
+                  <option value="round_robin">round_robin</option>
+                </select>
               </>
             )}
             {form.type === "cups" && (
@@ -356,7 +378,10 @@ function pulseCapable(p: Printer): boolean {
 }
 
 function typeOptions(editing: Printer | null): string[] {
-  const base = ["virtual", "escpos_network", "escpos_usb", "cups", "ipp_network"];
+  const base = [
+    "virtual", "escpos_network", "escpos_usb", "cups", "ipp_network",
+    "zpl_network", "star_network", "pool",
+  ];
   if (editing && !base.includes(editing.type)) base.push(editing.type);
   return base;
 }
@@ -458,9 +483,15 @@ function buildBody(form: typeof EMPTY) {
     params = { ...params, vendor_id: parseInt(form.vendor_id, 16), product_id: parseInt(form.product_id, 16) };
   if (form.type === "cups")
     params = { ...params, queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}) };
-  if (form.type === "ipp_network") params = { ...params, host: form.host, port: form.port };
+  if (form.type === "ipp_network" || form.type === "zpl_network" || form.type === "star_network")
+    params = { ...params, host: form.host, port: form.port };
+  if (form.type === "pool") params = { ...params, members: parseMembers(form.members), strategy: form.strategy };
   if (form.type === "virtual") params = { ...params, columns: form.columns };
   return { name: form.name, params, allow_raw: form.allow_raw };
+}
+
+function parseMembers(s: string): number[] {
+  return s.split(",").map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
 }
 
 // Edit preserves the original params (members/strategy/encoding/etc) and overrides only the
@@ -480,9 +511,13 @@ function buildEditBody(form: typeof EMPTY, original: Printer) {
     params.queue = form.queue;
     if (form.device_uri) params.device_uri = form.device_uri;
   }
-  if (form.type === "ipp_network") {
+  if (form.type === "ipp_network" || form.type === "zpl_network" || form.type === "star_network") {
     params.host = form.host;
     params.port = form.port;
+  }
+  if (form.type === "pool") {
+    params.members = parseMembers(form.members);
+    params.strategy = form.strategy;
   }
   if (form.type === "virtual") params.columns = form.columns;
   return {

@@ -22,18 +22,29 @@ def test_put_remote_persists(client):
 
 
 def test_enabling_access_via_config_enforces_jwt(client):
-    # Enabling Access through the UI config must make admin routes require the assertion.
+    # Enabling Access with LAN-bypass OFF makes admin routes require the assertion everywhere.
     resp = client.put("/v1/admin/remote", json={
         "mode": "cloudflare",
         "access_team_domain": "team.cloudflareaccess.com",
         "access_aud": "aud-tag",
+        "access_lan_bypass": False,
     })
     assert resp.status_code == 200  # the PUT itself ran before enforcement flipped on
 
-    # Now any admin call without the Cloudflare assertion is rejected.
     blocked = client.get("/v1/admin/remote")
     assert blocked.status_code == 403
     assert blocked.json()["error"]["code"] == "forbidden"
+    assert client.get("/v1/printers").status_code == 200  # non-admin unaffected
 
-    # Non-admin routes are unaffected.
-    assert client.get("/v1/printers").status_code == 200
+
+def test_access_with_lan_bypass_keeps_lan_working(client):
+    # Default LAN-bypass: Access on, but a direct-LAN (untrusted-peer) admin call still works.
+    resp = client.put("/v1/admin/remote", json={
+        "mode": "cloudflare",
+        "access_team_domain": "team.cloudflareaccess.com",
+        "access_aud": "aud-tag",
+        "access_lan_bypass": True,
+    })
+    assert resp.status_code == 200
+    assert client.get("/v1/admin/remote").json()["access_lan_bypass"] is True
+    assert client.get("/v1/admin/printers").status_code == 200

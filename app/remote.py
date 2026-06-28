@@ -30,6 +30,8 @@ def resolve_remote(ctx: Context) -> dict[str, Any]:
     for k in _KEYS:
         v = cfg.get(k)
         out[k] = v if v not in (None, "") else defaults[k]
+    bypass = cfg.get("access_lan_bypass")
+    out["access_lan_bypass"] = s.access_lan_bypass if bypass is None else bool(bypass)
     out["access_enabled"] = bool(out["access_team_domain"] and out["access_aud"])
     return out
 

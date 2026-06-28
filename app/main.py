@@ -36,7 +36,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/admin"):
             resp.headers["Content-Security-Policy"] = (
                 "default-src 'self'; img-src 'self' data: blob:; "
-                "style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'"
+                "style-src 'self' 'unsafe-inline'; "
+                # allow the in-browser PDF preview (<embed>/<iframe> of a blob: PDF)
+                "object-src 'self' blob:; frame-src 'self' blob:; frame-ancestors 'none'"
             )
             resp.headers["X-Frame-Options"] = "DENY"
             resp.headers["Referrer-Policy"] = "no-referrer"

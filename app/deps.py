@@ -37,10 +37,17 @@ def require_auth(request: Request, ctx: Context = Depends(get_ctx)) -> AuthInfo:
 
 def require_access(request: Request, ctx: Context = Depends(get_ctx)) -> str | None:
     """Enforce Cloudflare Access on admin routes when configured (P12.5). No-op otherwise."""
+    from .auth import _peer_trusted
     from .remote import resolve_remote
 
     r = resolve_remote(ctx)
     if not r["access_enabled"]:
+        return None
+    # Coexist with LAN: enforce the Cloudflare JWT only for requests that arrived via a trusted
+    # proxy (the tunnel). Direct-LAN requests still require the shared secret (Bearer), so both
+    # access paths work at once. Set access_lan_bypass=false to enforce Access everywhere.
+    peer = request.client.host if request.client else ""
+    if r["access_lan_bypass"] and not _peer_trusted(peer, ctx.settings.trusted_proxies):
         return None
     token = request.headers.get("Cf-Access-Jwt-Assertion")
     if not token:

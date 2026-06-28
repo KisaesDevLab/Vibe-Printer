@@ -8,13 +8,14 @@ interface RemoteCfg {
   access_team_domain: string;
   access_aud: string;
   cloudflared_metrics_url: string;
+  access_lan_bypass: boolean;
   access_enabled: boolean;
   tunnel: string;
 }
 
 const EMPTY: RemoteCfg = {
   mode: "lan", hostname: "", access_team_domain: "", access_aud: "",
-  cloudflared_metrics_url: "", access_enabled: false, tunnel: "unknown",
+  cloudflared_metrics_url: "", access_lan_bypass: true, access_enabled: false, tunnel: "unknown",
 };
 
 export function RemoteAccessPage() {
@@ -34,6 +35,7 @@ export function RemoteAccessPage() {
       mode: form.mode, hostname: form.hostname,
       access_team_domain: form.access_team_domain, access_aud: form.access_aud,
       cloudflared_metrics_url: form.cloudflared_metrics_url,
+      access_lan_bypass: form.access_lan_bypass,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["remote"] }); setMsg("Saved."); },
     onError: (e: Error) => setMsg(e.message),
@@ -98,6 +100,16 @@ export function RemoteAccessPage() {
         <label>Application AUD tag</label>
         <input value={form.access_aud}
                onChange={(e) => setForm({ ...form, access_aud: e.target.value })} />
+        <label className="row" style={{ marginTop: 10 }}>
+          <input
+            type="checkbox"
+            style={{ width: "auto" }}
+            checked={form.access_lan_bypass}
+            onChange={(e) => setForm({ ...form, access_lan_bypass: e.target.checked })}
+          />
+          <span>Allow direct-LAN access without Access (enforce the JWT only via the tunnel) —
+            lets LAN and Cloudflare work at the same time</span>
+        </label>
 
         <div style={{ marginTop: 12 }}>
           <button onClick={() => save.mutate()} disabled={save.isPending}>Save</button>

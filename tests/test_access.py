@@ -8,14 +8,24 @@ def test_admin_open_when_access_not_configured(client):
     assert client.get("/v1/admin/printers").status_code == 200
 
 
-def test_admin_requires_access_assertion_when_configured(client):
+def test_admin_requires_access_assertion_when_enforced_everywhere(client):
     ctx = client.app.state.ctx
     ctx.settings.access_team_domain = "team.cloudflareaccess.com"
     ctx.settings.access_aud = "aud-tag"
-    # Valid shared secret but no Cf-Access-Jwt-Assertion header -> 403.
+    ctx.settings.access_lan_bypass = False  # enforce on every request (incl. this untrusted peer)
     r = client.get("/v1/admin/printers")
     assert r.status_code == 403
     assert r.json()["error"]["code"] == "forbidden"
+
+
+def test_lan_bypass_allows_direct_lan_with_access_enabled(client):
+    # Access on + default LAN-bypass: a direct (untrusted-peer) request still works with the
+    # shared secret, so LAN and Cloudflare coexist. The JWT is only enforced via the tunnel.
+    ctx = client.app.state.ctx
+    ctx.settings.access_team_domain = "team.cloudflareaccess.com"
+    ctx.settings.access_aud = "aud-tag"
+    ctx.settings.access_lan_bypass = True
+    assert client.get("/v1/admin/printers").status_code == 200
 
 
 def test_non_admin_routes_unaffected_by_access(client):

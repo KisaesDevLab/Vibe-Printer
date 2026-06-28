@@ -663,6 +663,7 @@ def put_remote(
         "access_team_domain": body.get("access_team_domain", ""),
         "access_aud": body.get("access_aud", ""),
         "cloudflared_metrics_url": body.get("cloudflared_metrics_url", ""),
+        "access_lan_bypass": bool(body.get("access_lan_bypass", True)),
     }
     ctx.registry.update_device(
         DeviceUpdate(

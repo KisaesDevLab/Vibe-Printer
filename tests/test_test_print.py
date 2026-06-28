@@ -16,6 +16,29 @@ def test_test_print_virtual_completes(client):
     assert wait_for_job(client, r.json()["job_id"])["status"] == "done"
 
 
+def test_test_print_available_for_all_types(client):
+    member = client.post(
+        "/v1/admin/printers", json={"name": "m", "params": {"type": "virtual"}}
+    ).json()["id"]
+    cases = [
+        {"type": "virtual"},
+        {"type": "escpos_network", "host": "127.0.0.1", "port": 9},
+        {"type": "escpos_usb", "vendor_id": 1208, "product_id": 3624},
+        {"type": "cups", "queue": "q"},
+        {"type": "ipp_network", "host": "127.0.0.1"},
+        {"type": "zpl_network", "host": "127.0.0.1", "port": 9},
+        {"type": "star_network", "host": "127.0.0.1", "port": 9},
+        {"type": "pool", "members": [member], "strategy": "failover"},
+    ]
+    for i, params in enumerate(cases):
+        pid = client.post(
+            "/v1/admin/printers", json={"name": f"t{i}", "params": params}
+        ).json()["id"]
+        r = client.post(f"/v1/admin/printers/{pid}/test")
+        assert r.status_code == 200, f"{params['type']}: {r.text}"
+        assert r.json()["job_id"], params["type"]
+
+
 def test_test_print_cups_renders_pdf(client):
     cid = client.post(
         "/v1/admin/printers", json={"name": "C", "params": {"type": "cups", "queue": "q"}}

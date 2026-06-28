@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     cloudflared_metrics_url: str = ""  # e.g. http://cloudflared:2000 for /ready health
     remote_access_mode: str = "lan"  # lan | cloudflare | tailscale (display)
     remote_hostname: str = ""  # display-only public hostname (Decision 12)
+    # Enforce Cloudflare Access only on tunnelled requests so direct-LAN access keeps working
+    # (LAN still requires the shared secret). Set false to enforce Access on every request.
+    access_lan_bypass: bool = True
 
     @property
     def db_path(self) -> Path:
