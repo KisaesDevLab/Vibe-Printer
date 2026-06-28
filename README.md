@@ -1,3 +1,5 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I3D3227TTP)
+
 # Vibe Print
 
 [![CI](https://github.com/KisaesDevLab/Vibe-Printer/actions/workflows/ci.yml/badge.svg)](https://github.com/KisaesDevLab/Vibe-Printer/actions/workflows/ci.yml)
