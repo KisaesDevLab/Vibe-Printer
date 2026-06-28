@@ -1,0 +1,119 @@
+# Stripe payment receipt — thermal format + PDF template.
+# Import on any appliance:  POST /v1/admin/config/import  {yaml: <this file>, dry_run:false}
+formats:
+- name: Stripe Payment Receipt
+  elements:
+    elements:
+    - type: text
+      value: '{{ data.merchant }}'
+      align: center
+      bold: true
+      size:
+      - 2
+      - 2
+    - type: text
+      value: Payment Receipt
+      align: center
+    - type: text
+      value: '{{ data.date }}'
+      align: center
+    - type: rule
+    - type: table
+      cols:
+      - 35
+      - 12
+      align:
+      - left
+      - right
+      rows_from: data.line_items
+      row:
+      - '{{ item.name }}'
+      - '{{ item.amount }}'
+    - type: rule
+    - type: text
+      value: TOTAL  {{ data.amount }} {{ data.currency }}
+      align: right
+      bold: true
+    - type: feed
+      lines: 1
+    - type: text
+      value: Paid with {{ data.card_brand }} ****{{ data.card_last4 }}
+      align: left
+    - type: text
+      value: 'Status: {{ data.status }}'
+      align: left
+    - type: text
+      value: 'Receipt #: {{ data.receipt_number }}'
+      align: left
+    - type: text
+      value: 'Charge: {{ data.charge_id }}'
+      align: left
+    - type: text
+      value: '{{ data.customer_email }}'
+      align: left
+    - type: rule
+    - type: qr
+      value: '{{ data.receipt_url }}'
+      size: 6
+    - type: text
+      value: Scan for your full receipt
+      align: center
+    - type: feed
+      lines: 1
+    - type: text
+      value: Thank you!
+      align: center
+    - type: feed
+      lines: 2
+    - type: cut
+  sample_data:
+    merchant: Acme Co
+    date: 2026-06-27 15:42
+    amount: '24.48'
+    currency: USD
+    card_brand: Visa
+    card_last4: '4242'
+    status: SUCCEEDED
+    receipt_number: 2845-1042
+    charge_id: ch_3PabcXYZ12345
+    customer_email: jane@example.com
+    line_items:
+    - name: Widget
+      amount: '9.98'
+    - name: Gadget Pro
+      amount: '14.50'
+    receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ
+templates:
+- name: Stripe Payment Receipt (PDF)
+  html: '<div class="receipt"><h1>{{ data.merchant }}</h1><div class="sub">Payment Receipt &middot; {{ data.date }}</div><table
+    class="items"><thead><tr><th>Item</th><th class="r">Amount</th></tr></thead><tbody>{% for li in data.line_items %}<tr><td>{{
+    li.name }}</td><td class="r">{{ li.amount }}</td></tr>{% endfor %}</tbody></table><div class="total">TOTAL&nbsp;&nbsp;{{
+    data.amount }} {{ data.currency }}</div><table class="meta"><tr><td>Paid with</td><td>{{ data.card_brand }} ****{{ data.card_last4
+    }}</td></tr><tr><td>Status</td><td>{{ data.status }}</td></tr><tr><td>Receipt #</td><td>{{ data.receipt_number }}</td></tr><tr><td>Charge</td><td>{{
+    data.charge_id }}</td></tr><tr><td>Email</td><td>{{ data.customer_email }}</td></tr></table>{% if data.receipt_url %}<div
+    class="qr"><img src="{{ data.receipt_url | qr_data_uri(box_size=4) }}"><div>Scan for your full receipt</div></div>{% endif
+    %}<div class="thanks">Thank you!</div></div>'
+  css: 'body{font-family:Helvetica,Arial,sans-serif;color:#1a1a1a}.receipt{max-width:440px;margin:0 auto}h1{margin:0;font-size:26px}.sub{color:#666;margin-bottom:18px}table{width:100%;border-collapse:collapse}.items
+    th,.items td{text-align:left;padding:6px 0;border-bottom:1px solid #eee}.r{text-align:right}.total{text-align:right;font-size:18px;font-weight:bold;margin:12px
+    0 18px}.meta td{padding:3px 0;color:#444}.meta td:first-child{color:#888;width:90px}.qr{text-align:center;margin-top:26px}.qr
+    img{width:120px;height:120px}.qr div{color:#888;font-size:12px;margin-top:6px}.thanks{text-align:center;margin-top:18px;font-weight:bold}'
+  page_setup:
+    size: Letter
+    margins: 2cm
+  sample_data:
+    merchant: Acme Co
+    date: 2026-06-27 15:42
+    amount: '24.48'
+    currency: USD
+    card_brand: Visa
+    card_last4: '4242'
+    status: SUCCEEDED
+    receipt_number: 2845-1042
+    charge_id: ch_3PabcXYZ12345
+    customer_email: jane@example.com
+    line_items:
+    - name: Widget
+      amount: '9.98'
+    - name: Gadget Pro
+      amount: '14.50'
+    receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ

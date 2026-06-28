@@ -507,6 +507,30 @@ through CUPS). PDF/PostScript text is selectable in the output; the base content
 
 ---
 
+## Recipe: Stripe payment receipts
+
+A ready-made **thermal format** and **PDF template** for Stripe payments live in
+[`config/stripe-receipts.yaml`](config/stripe-receipts.yaml). Import them onto any appliance:
+
+```bash
+curl -s localhost:8080/v1/admin/config/import -H "Authorization: Bearer $SECRET" \
+  -d "{\"dry_run\":false,\"yaml\":$(python -c 'import json,sys;print(json.dumps(open("config/stripe-receipts.yaml").read()))')}"
+```
+
+Then map a Stripe `charge.succeeded` object to the print `data` and enqueue with
+[`examples/stripe_to_vibe.py`](examples/stripe_to_vibe.py):
+
+```bash
+# thermal printer with the format; or use --template N for an office/laser printer
+stripe charges retrieve ch_123 | \
+  python examples/stripe_to_vibe.py http://localhost:8080 "$SECRET" --printer 1 --format 2
+```
+
+Stripe amounts are in **cents** (the helper formats them); line items aren't on a Charge, so pass
+them from your order system via `--line-items`. The receipt's QR encodes the Stripe `receipt_url`.
+
+---
+
 ## Configuration (environment variables)
 
 All variables are prefixed `VIBE_PRINT_`.
