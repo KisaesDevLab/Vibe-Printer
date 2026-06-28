@@ -13,14 +13,34 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from jinja2 import StrictUndefined
+from jinja2 import ChainableUndefined, StrictUndefined
 from jinja2.exceptions import TemplateError, UndefinedError
 from jinja2.sandbox import SandboxedEnvironment
 
 from .errors import ApiError
 
+
+class _LenientUndefined(ChainableUndefined):
+    """Optional-field-friendly undefined for HTML/PDF templates: missing names render empty,
+    are falsy in `{% if %}`, and iterate to nothing in `{% for %}` (so `{% if logo %}` and
+    `{% for x in surcharges %}` work without every optional key being supplied)."""
+
+    __slots__ = ()
+
+    def __iter__(self) -> Any:
+        return iter(())
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __len__(self) -> int:
+        return 0
+
+
+# Thermal/overlay element rendering stays strict (controlled schema → catch typos).
 _env = SandboxedEnvironment(autoescape=False, undefined=StrictUndefined)
-_html_env = SandboxedEnvironment(autoescape=True, undefined=StrictUndefined)
+# PDF/HTML templates are lenient so optional variables can be omitted.
+_html_env = SandboxedEnvironment(autoescape=True, undefined=_LenientUndefined)
 
 
 def qr_data_uri(value: str, box_size: int = 4, border: int = 2, ec: str = "M") -> str:

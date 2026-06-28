@@ -85,11 +85,11 @@ formats:
     receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ
 templates:
 - name: Stripe Payment Receipt (PDF)
-  html: '<div class="receipt"><h1>{{ data.merchant }}</h1><div class="sub">Payment Receipt &middot; {{ data.date }}</div><table class="items"><thead><tr><th>Item</th><th class="r">Amount</th></tr></thead><tbody>{%
+  html: '<html><body><div class="receipt"><h1>{{ data.merchant }}</h1><div class="sub">Payment Receipt &middot; {{ data.date }}</div><table class="items"><thead><tr><th>Item</th><th class="r">Amount</th></tr></thead><tbody>{%
     for li in data.line_items %}<tr><td>{{ li.name }}</td><td class="r">{{ li.amount }}</td></tr>{% endfor %}</tbody></table><div class="total">TOTAL&nbsp;&nbsp;{{ data.amount }} {{ data.currency }}</div><table
     class="meta"><tr><td>Paid with</td><td>{{ data.card_brand }} ****{{ data.card_last4 }}</td></tr><tr><td>Status</td><td>{{ data.status }}</td></tr><tr><td>Receipt #</td><td>{{ data.receipt_number }}</td></tr><tr><td>Charge</td><td>{{
     data.charge_id }}</td></tr><tr><td>Email</td><td>{{ data.customer_email }}</td></tr></table>{% if data.receipt_url %}<div class="qr"><img src="{{ data.receipt_url | qr_data_uri(box_size=4) }}"><div>Scan
-    for your full receipt</div></div>{% endif %}<div class="thanks">Thank you!</div></div>'
+    for your full receipt</div></div>{% endif %}<div class="thanks">Thank you!</div></div></body><html></html>'
   css: 'body{font-family:Helvetica,Arial,sans-serif;color:#1a1a1a}.receipt{max-width:440px;margin:0 auto}h1{margin:0;font-size:26px}.sub{color:#666;margin-bottom:18px}table{width:100%;border-collapse:collapse}.items
     th,.items td{text-align:left;padding:6px 0;border-bottom:1px solid #eee}.r{text-align:right}.total{text-align:right;font-size:18px;font-weight:bold;margin:12px 0 18px}.meta td{padding:3px 0;color:#444}.meta
     td:first-child{color:#888;width:90px}.qr{text-align:center;margin-top:26px}.qr img{width:120px;height:120px}.qr div{color:#888;font-size:12px;margin-top:6px}.thanks{text-align:center;margin-top:18px;font-weight:bold}'
@@ -225,3 +225,64 @@ templates:
       Client prefers SafeSend for delivery.
 
       Confirm extension if docs not received by 3/25.'
+- name: Invoice (T&B)
+  html: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Invoice {{ invoice_number }}</title>\n</head>\n<body>\n<div class=\"page\">\n\n  <!-- ============ LETTERHEAD ============\
+    \ -->\n  <div class=\"letterhead\">\n    {% if logo_url %}\n    <div class=\"logo\"><img src=\"{{ logo_url }}\" alt=\"{{ business_name }}\"></div>\n    {% endif %}\n    <div class=\"biz\">\n      <div\
+    \ class=\"biz-name\">{{ business_name }}</div>\n      {% if business_address %}<div class=\"biz-addr\">{{ business_address }}</div>{% endif %}\n    </div>\n  </div>\n\n  <!-- ============ INVOICE HEADER\
+    \ ============ -->\n  <div class=\"header-grid\">\n    <div class=\"client\">\n      {% if client_name %}<div class=\"cname\">{{ client_name }}</div>{% endif %}\n      {% if client_address %}<div class=\"\
+    caddr\">{{ client_address }}</div>{% endif %}\n    </div>\n    <div class=\"meta\">\n      {% if client_id %}<div class=\"row\"><span class=\"label\">ID:</span><span>{{ client_id }}</span></div>{% endif\
+    \ %}\n      <div class=\"row\"><span class=\"label\">Invoice:</span><span>{{ invoice_number }}</span></div>\n      <div class=\"row\"><span class=\"label\">Date:</span><span>{{ invoice_date }}</span></div>\n\
+    \      <div class=\"row\"><span class=\"label\">Due:</span><span>{{ due_terms | default(\"Due Upon Receipt\") }}</span></div>\n    </div>\n  </div>\n\n  <hr class=\"rule\">\n\n  <!-- ============ SERVICE\
+    \ / CHARGES ============ -->\n  <div class=\"svc-intro\">{{ service_intro | default(\"For professional service rendered as follows:\") }}</div>\n  {% if billing_name %}<div class=\"svc-client\">{{ billing_name\
+    \ }}</div>{% endif %}\n\n  <div class=\"charges\">\n    {% for item in line_items %}\n    <div class=\"charge-row detail\">\n      <span class=\"desc\">{{ item.description }}</span>\n      <span class=\"\
+    amt\">{{ item.amount }}</span>\n    </div>\n    {% endfor %}\n\n    {% if subtotal %}\n    <div class=\"charge-row\">\n      <span class=\"desc\">{{ subtotal_label | default(\"Billed Time and Expenses\"\
+    ) }}</span>\n      <span class=\"amt\">{{ subtotal }}</span>\n    </div>\n    {% endif %}\n\n    {% for charge in surcharges %}\n    <div class=\"charge-row\">\n      <span class=\"desc\">{{ charge.label\
+    \ }}</span>\n      <span class=\"amt\">{{ charge.amount }}</span>\n    </div>\n    {% endfor %}\n\n    <div class=\"charge-row total\">\n      <span class=\"desc\">{{ total_label | default(\"Total Current\
+    \ Charges\") }}</span>\n      <span class=\"amt\">{{ total }}</span>\n    </div>\n  </div>\n\n  <div class=\"spacer\"></div>\n\n  <!-- ============ BOTTOM: dunning + footer ============ -->\n  <div\
+    \ class=\"bottom\">\n    {% if dunning %}<div class=\"dunning\">{{ dunning | safe }}</div>{% endif %}\n    {% if invoice_footer %}<div class=\"invoice-footer\">{{ invoice_footer | safe }}</div>{% endif\
+    \ %}\n  </div>\n\n</div>\n</body>\n</html>"
+  css: ":root {\n  --accent: #1a1a1a;\n  --ink:    #222;\n  --rule:   #000;\n}\n* { box-sizing: border-box; }\nhtml, body {\n  margin: 0; padding: 0;\n  background: #e9e9e9;\n  font-family: \"Times New\
+    \ Roman\", Georgia, serif;\n  color: var(--ink);\n}\n.page {\n  width: 8.5in;\n  min-height: 11in;\n  margin: 24px auto;\n  padding: 0.6in 0.6in 0.5in;\n  background: #fff;\n  box-shadow: 0 2px 14px\
+    \ rgba(0,0,0,.25);\n  display: flex;\n  flex-direction: column;\n}\n.letterhead {\n  display: flex;\n  align-items: flex-start;\n  gap: 18px;\n  padding-bottom: 10px;\n  border-bottom: 2px solid var(--accent);\n\
+    }\n.letterhead .logo img { max-height: 90px; max-width: 230px; display: block; }\n.letterhead .biz { padding-top: 2px; }\n.biz .biz-name {\n  font-family: Arial, Helvetica, sans-serif;\n  font-size:\
+    \ 22px; font-weight: 800; letter-spacing: -.2px;\n  color: var(--accent); line-height: 1.1;\n}\n.biz .biz-addr { font-size: 12px; line-height: 1.4; margin-top: 4px; white-space: pre-line; }\n.header-grid\
+    \ { display: flex; justify-content: space-between; gap: 30px; padding: 16px 0 12px; }\n.client { font-size: 14px; line-height: 1.4; }\n.client .caddr { white-space: pre-line; }\n.meta { font-size: 14px;\
+    \ line-height: 1.5; min-width: 240px; }\n.meta .row { display: flex; gap: 10px; }\n.meta .label { width: 60px; }\nhr.rule { border: none; border-top: 1px solid var(--rule); margin: 0 0 6px; }\n.svc-intro\
+    \  { font-size: 14px; margin-bottom: 4px; }\n.svc-client { font-size: 14px; margin: 2px 0 12px; }\n.charges { font-size: 14px; }\n.charge-row { display: flex; justify-content: space-between; align-items:\
+    \ baseline; padding: 3px 0; }\n.charge-row .desc { padding-right: 24px; }\n.charge-row.detail .desc { padding-left: 28px; }\n.charge-row .amt {\n  min-width: 110px; text-align: right; border-bottom:\
+    \ 1px solid #000;\n  padding-bottom: 1px; white-space: nowrap;\n}\n.charge-row.total .amt { border-top: 1px solid #000; border-bottom: 3px double #000; }\n.spacer { flex: 1 1 auto; min-height: 40px;\
+    \ }\n.bottom { margin-top: auto; }\n.dunning { font-size: 13px; line-height: 1.4; font-weight: 700; margin-bottom: 14px; }\n.invoice-footer { font-size: 10px; line-height: 1.4; color: #333; }\n.invoice-footer\
+    \ .terms { font-style: italic; }\n@media print {\n  html, body { background: #fff; }\n  .page { margin: 0; box-shadow: none; width: auto; min-height: auto; }\n  @page { size: letter; margin: 0.5in;\
+    \ }\n}"
+  page_setup:
+    size: Letter
+    margins: 0.5in
+  sample_data:
+    business_name: The CPA Group, PC
+    business_address: '217 Fourth Street, PO Box 68
+
+      Monett, MO 65708
+
+      866-991-1272  •  www.cpa2web.com'
+    client_id: DIEC6130
+    client_name: Timothy P & Barbara Dieckhoff
+    client_address: '109 Main St
+
+      Monett, MO  65708'
+    invoice_number: '2000166095'
+    invoice_date: 12/10/2025
+    due_terms: Due Upon Receipt
+    billing_name: Timothy & Barbara Dieckhoff
+    line_items:
+    - description: For services provided in compilation of financial statements as of 11/30/2025
+      amount: $350.00
+    subtotal: $350.00
+    surcharges:
+    - label: Technology Surcharge
+      amount: '14.00'
+    - label: Sales Tax
+      amount: '28.71'
+    total: $392.71
+    dunning: Your account is past due. A 1.5% monthly interest charge applies to balances over 30 days.
+    invoice_footer: '<strong>PLEASE MAIL PAYMENTS TO:</strong> The CPA Group, PC, PO Box 68, Monett, MO 65708<br>EIN: 43-1797482<br><span class=''terms''>Thank you for your business. Payment is due upon
+      presentation of this invoice.</span>'

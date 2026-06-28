@@ -462,8 +462,12 @@ preview with no `data`, the format/template's saved `sample_data` is used.
 
 ### Missing variables
 
-Undefined variables raise `render_error` (StrictUndefined) rather than printing blanks — so a typo
-or absent field fails loudly. Keep `data` complete, or guard with `{% if %}` / the `default` filter.
+- **Thermal formats & overlays** are **strict** — an undefined variable raises `render_error`, so a
+  typo in the controlled element schema fails loudly. Keep `data` complete or use the `default` filter.
+- **PDF/HTML templates** are **lenient** (optional-friendly) — a missing variable renders empty, is
+  falsy in `{% if %}`, and iterates to nothing in `{% for %}`. So `{% if logo_url %}` and
+  `{% for s in surcharges %}` work even when those optional fields aren't supplied.
+
 Capability-aware rendering also rejects elements a printer can't do (e.g. `qr` on a non-QR printer)
 with `unsupported_for_printer`.
 

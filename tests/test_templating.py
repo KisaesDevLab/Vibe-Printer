@@ -40,6 +40,26 @@ def test_pdf_context_exposes_top_level_and_data_namespace():
     assert ctx["data"]["client"]["name"] == "Acme"  # {{ data.client.name }} still works
 
 
+def test_html_env_is_lenient_for_optionals():
+    from app.templating import _html_env
+
+    # Missing optionals: {% if %} falsy, {% for %} empty, {{ }} empty — no error.
+    out = _html_env.from_string(
+        "{% if logo %}L{% endif %}[{% for s in extras %}{{ s }}{% endfor %}]{{ missing }}"
+    ).render()
+    assert out == "[]"
+
+
+def test_thermal_env_stays_strict():
+    import pytest as _pytest
+    from jinja2.exceptions import UndefinedError
+
+    from app.templating import _env
+
+    with _pytest.raises(UndefinedError):
+        _env.from_string("{{ data.missing }}").render(data={})
+
+
 def test_sandbox_blocks_dunder_access():
     with pytest.raises(ApiError):
         merge_format(
