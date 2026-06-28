@@ -15,6 +15,7 @@ from .models import Capabilities, PrinterRead
 from .queue import JobStore
 from .registry import Registry
 from .settings import Settings
+from .tunnel import TunnelManager
 
 if TYPE_CHECKING:
     from .queue import Worker
@@ -30,6 +31,7 @@ class Context:
     locks: PrinterLocks
     jobs: JobStore
     rate_limiter: RateLimiter
+    tunnel: TunnelManager
     worker: Worker | None = None
     started_at: float = 0.0  # monotonic seconds, set at lifespan startup (for uptime)
 
@@ -62,4 +64,5 @@ def build_context(settings: Settings) -> Context:
         locks=PrinterLocks(),
         jobs=JobStore(db),
         rate_limiter=RateLimiter(settings.rate_limit_per_minute),
+        tunnel=TunnelManager(),
     )

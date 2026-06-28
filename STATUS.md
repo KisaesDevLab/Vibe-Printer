@@ -36,6 +36,7 @@ architecture decisions (see bottom). QA: **73 tests passing + 1 skipped**, ruff 
 | P29 | Compliance | log-redaction processor (drops payload/data/html/css/value), payload-hash mode (`store_payloads=false` → hash after print), retention sweep (worker) + on-demand `retention/prune` and per-job `payload` erasure, opt-in SQLCipher-at-rest hook |
 
 | P12.5 | Cloudflare Access | RS256 JWT verify against team JWKS (aud/issuer), service-token path, identity → audit; enforced on `/v1/admin/*` when configured |
+| P16 | UI-managed tunnel | `cloudflared` bundled in the image; start/stop/status from the Remote Access page — **quick** mode (no token, instant trycloudflare URL) or **named** mode (token stored in DB, masked); auto-restarts on boot; verified end-to-end (public URL → appliance). LAN + Cloudflare run concurrently; Access enforced only on tunnelled requests (`access_lan_bypass`) |
 | P16 | Tunnel health | `GET /v1/admin/remote/status` polls cloudflared `/ready`; hostname display-only (Decision 12) |
 | P14.4/P28 | Webhooks + fleet | HMAC-signed failure (`dead`/`uncertain`) + printer-offline webhooks, periodic heartbeat phone-home, `GET /v1/admin/diagnostics` PII-free bundle |
 | P22.7 | Backup/restore | consistent `VACUUM INTO` snapshot endpoint + `deploy/backup.sh`/`restore.sh` to Backblaze B2 (Object Lock), restore-drill doc |

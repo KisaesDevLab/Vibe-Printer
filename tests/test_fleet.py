@@ -83,4 +83,4 @@ def test_heartbeat_test_endpoint_unconfigured(client):
 def test_remote_status(client):
     r = client.get("/v1/admin/remote/status").json()
     assert r["mode"] == "lan"
-    assert r["tunnel"] == "unknown"
+    assert r["tunnel"] in ("unknown", "unreachable")

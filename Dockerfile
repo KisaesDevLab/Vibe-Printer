@@ -19,8 +19,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libffi8 fonts-dejavu fonts-liberation \
       libusb-1.0-0 \
       cups cups-client libcups2 \
+      curl ca-certificates \
       gcc python3-dev libcups2-dev \
       && rm -rf /var/lib/apt/lists/*
+
+# cloudflared — the UI can run a managed tunnel (named or quick) as a child process.
+ARG TARGETARCH=amd64
+RUN curl -fsSL -o /usr/local/bin/cloudflared \
+      "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${TARGETARCH}" \
+    && chmod +x /usr/local/bin/cloudflared
 
 WORKDIR /srv
 COPY pyproject.toml ./

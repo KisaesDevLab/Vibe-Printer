@@ -7,7 +7,9 @@ def test_remote_defaults(client):
     r = client.get("/v1/admin/remote").json()
     assert r["mode"] == "lan"
     assert r["access_enabled"] is False
-    assert r["tunnel"] == "unknown"
+    # No tunnel running -> health poll of the (default) metrics URL is unreachable.
+    assert r["tunnel"] in ("unknown", "unreachable")
+    assert r["tunnel_status"]["running"] is False
 
 
 def test_put_remote_persists(client):

@@ -11,11 +11,16 @@ interface RemoteCfg {
   access_lan_bypass: boolean;
   access_enabled: boolean;
   tunnel: string;
+  tunnel_mode: string;
+  tunnel_enabled: boolean;
+  tunnel_token_set: boolean;
+  tunnel_status?: { running: boolean; mode: string | null; url: string | null };
 }
 
 const EMPTY: RemoteCfg = {
   mode: "lan", hostname: "", access_team_domain: "", access_aud: "",
   cloudflared_metrics_url: "", access_lan_bypass: true, access_enabled: false, tunnel: "unknown",
+  tunnel_mode: "named", tunnel_enabled: false, tunnel_token_set: false,
 };
 
 export function RemoteAccessPage() {
@@ -26,9 +31,21 @@ export function RemoteAccessPage() {
     refetchInterval: 15000,
   });
   const [form, setForm] = useState<RemoteCfg>(EMPTY);
+  const [token, setToken] = useState("");
   const [msg, setMsg] = useState("");
 
   useEffect(() => { if (data) setForm(data); }, [data]);
+
+  const tunnelStart = useMutation({
+    mutationFn: () => api.post("/v1/admin/remote/tunnel/start", { mode: form.tunnel_mode }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["remote"] }); setMsg("Tunnel starting…"); },
+    onError: (e: Error) => setMsg(e.message),
+  });
+  const tunnelStop = useMutation({
+    mutationFn: () => api.post("/v1/admin/remote/tunnel/stop", {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["remote"] }); setMsg("Tunnel stopped"); },
+    onError: (e: Error) => setMsg(e.message),
+  });
 
   const save = useMutation({
     mutationFn: () => api.put("/v1/admin/remote", {
@@ -36,8 +53,14 @@ export function RemoteAccessPage() {
       access_team_domain: form.access_team_domain, access_aud: form.access_aud,
       cloudflared_metrics_url: form.cloudflared_metrics_url,
       access_lan_bypass: form.access_lan_bypass,
+      tunnel_mode: form.tunnel_mode,
+      ...(token ? { tunnel_token: token } : {}),
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["remote"] }); setMsg("Saved."); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["remote"] });
+      setToken("");
+      setMsg("Saved.");
+    },
     onError: (e: Error) => setMsg(e.message),
   });
 
@@ -115,6 +138,54 @@ export function RemoteAccessPage() {
           <button onClick={() => save.mutate()} disabled={save.isPending}>Save</button>
         </div>
         {msg && <p className="muted">{msg}</p>}
+      </div>
+
+      <div className="card">
+        <h3>Cloudflare Tunnel (managed)</h3>
+        <p className="muted" style={{ fontSize: 13 }}>
+          Run a tunnel from this appliance — no host shell needed. <b>Quick</b> gives an instant
+          public URL with no Cloudflare account; <b>Named</b> uses a tunnel token for a stable
+          hostname (create the tunnel + public hostname → <code>http://localhost:8080</code> in the
+          Cloudflare dashboard, then paste the token here).
+        </p>
+        <div className="row">
+          <span className={`badge ${data?.tunnel_status?.running ? "ok" : ""}`}>
+            {data?.tunnel_status?.running ? `running (${data.tunnel_status.mode})` : "stopped"}
+          </span>
+          {data?.tunnel_status?.url && (
+            <a href={data.tunnel_status.url} target="_blank" rel="noreferrer"
+               style={{ color: "var(--accent)" }}>{data.tunnel_status.url}</a>
+          )}
+        </div>
+
+        <label>Tunnel mode</label>
+        <select value={form.tunnel_mode}
+                onChange={(e) => setForm({ ...form, tunnel_mode: e.target.value })}>
+          <option value="named">named (token, stable hostname)</option>
+          <option value="quick">quick (no token, ephemeral URL)</option>
+        </select>
+
+        {form.tunnel_mode === "named" && (
+          <>
+            <label>
+              Tunnel token {form.tunnel_token_set && <span className="badge ok">configured</span>}
+            </label>
+            <input type="password" value={token} placeholder={form.tunnel_token_set ? "•••••• (leave blank to keep)" : "eyJ..."}
+                   onChange={(e) => setToken(e.target.value)} />
+          </>
+        )}
+
+        <div className="row" style={{ marginTop: 12 }}>
+          <button onClick={() => save.mutate()} disabled={save.isPending}>Save token/mode</button>
+          <button onClick={() => tunnelStart.mutate()} disabled={tunnelStart.isPending}>Start</button>
+          <button className="ghost" onClick={() => tunnelStop.mutate()} disabled={tunnelStop.isPending}>
+            Stop
+          </button>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+          The token is stored on the appliance (write-only here). Enable encryption-at-rest for the
+          DB if this box is shipped to a client. The tunnel auto-restarts on reboot once started.
+        </p>
       </div>
 
       <div className="card">

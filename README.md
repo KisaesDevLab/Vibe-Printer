@@ -560,6 +560,12 @@ All variables are prefixed `VIBE_PRINT_`.
 
 ## Remote access
 
+**Everything from the UI (no host shell):** the **Remote Access** tab runs a `cloudflared` tunnel
+as a managed process inside the appliance. Pick **Quick** (instant `*.trycloudflare.com` URL, no
+Cloudflare account) or **Named** (paste a tunnel token for a stable dashboard hostname), then
+Start/Stop — it auto-restarts on reboot. LAN access stays on at the same time. (The compose
+`cloudflare` profile / sidecar remains as an alternative.)
+
 Three selectable modes, all optional:
 
 - **LAN-only** (default). Front with **Caddy** for TLS on a trusted segment (`--profile caddy`).

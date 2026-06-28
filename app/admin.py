@@ -638,11 +638,12 @@ async def heartbeat_test(ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
 
 @router.get("/remote")
 async def get_remote(ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
-    """Resolved remote-access config + live tunnel health (P16.4)."""
+    """Resolved remote-access config + live tunnel health (P16.4). Token is never returned."""
     from .remote import resolve_remote, tunnel_status
 
     r = resolve_remote(ctx)
     r["tunnel"] = await tunnel_status(r["cloudflared_metrics_url"])
+    r["tunnel_status"] = ctx.tunnel.status()  # managed-process state + quick URL
     return r
 
 
@@ -657,6 +658,10 @@ def put_remote(
 
     dev = ctx.registry.get_device()
     config = dict(dev["config"])
+    existing = config.get("remote_access", {})
+    # Keep the stored token unless a new non-empty one is supplied (it's write-only).
+    token = body.get("tunnel_token")
+    token = token if token else existing.get("tunnel_token", "")
     config["remote_access"] = {
         "mode": body.get("mode", "lan"),
         "hostname": body.get("hostname", ""),
@@ -664,6 +669,9 @@ def put_remote(
         "access_aud": body.get("access_aud", ""),
         "cloudflared_metrics_url": body.get("cloudflared_metrics_url", ""),
         "access_lan_bypass": bool(body.get("access_lan_bypass", True)),
+        "tunnel_mode": body.get("tunnel_mode", existing.get("tunnel_mode", "named")),
+        "tunnel_enabled": bool(body.get("tunnel_enabled", existing.get("tunnel_enabled", False))),
+        "tunnel_token": token,
     }
     ctx.registry.update_device(
         DeviceUpdate(
@@ -672,6 +680,57 @@ def put_remote(
     )
     ctx.audit.config_change(entity="remote_access", action="update", real_ip=auth.real_ip)
     return resolve_remote(ctx)
+
+
+@router.post("/remote/tunnel/start")
+async def tunnel_start(
+    body: dict[str, Any] = Body(default={}),
+    ctx: Context = Depends(get_ctx),
+    auth: AuthInfo = Depends(require_auth),
+) -> dict[str, Any]:
+    """Start the managed cloudflared tunnel (named uses the stored token; quick needs none)."""
+    from .remote import resolve_remote, tunnel_token
+
+    r = resolve_remote(ctx)
+    mode = body.get("mode") or r["tunnel_mode"]
+    metrics = "127.0.0.1:2000"
+    local = body.get("local_url", "http://localhost:8080")
+    if mode == "quick":
+        await ctx.tunnel.start(local_url=local, metrics=metrics)
+    else:
+        token = tunnel_token(ctx)
+        if not token:
+            raise ApiError("validation_error", "no tunnel token saved — add one first")
+        await ctx.tunnel.start(token=token, metrics=metrics)
+    # Persist enabled so it auto-starts on reboot.
+    dev = ctx.registry.get_device()
+    cfg = dict(dev["config"])
+    ra = dict(cfg.get("remote_access", {}))
+    ra["tunnel_enabled"] = True
+    ra["tunnel_mode"] = mode
+    cfg["remote_access"] = ra
+    ctx.registry.update_device(
+        DeviceUpdate(name=dev["name"], timezone=dev["timezone"], config=cfg, version=dev["version"])
+    )
+    ctx.audit.config_change(entity="tunnel", action="start", real_ip=auth.real_ip)
+    return ctx.tunnel.status()
+
+
+@router.post("/remote/tunnel/stop")
+async def tunnel_stop(
+    ctx: Context = Depends(get_ctx), auth: AuthInfo = Depends(require_auth)
+) -> dict[str, Any]:
+    await ctx.tunnel.stop()
+    dev = ctx.registry.get_device()
+    cfg = dict(dev["config"])
+    ra = dict(cfg.get("remote_access", {}))
+    ra["tunnel_enabled"] = False
+    cfg["remote_access"] = ra
+    ctx.registry.update_device(
+        DeviceUpdate(name=dev["name"], timezone=dev["timezone"], config=cfg, version=dev["version"])
+    )
+    ctx.audit.config_change(entity="tunnel", action="stop", real_ip=auth.real_ip)
+    return ctx.tunnel.status()
 
 
 @router.get("/remote/status")

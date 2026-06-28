@@ -2852,7 +2852,7 @@
     },
     "/v1/admin/remote": {
       "get": {
-        "description": "Resolved remote-access config + live tunnel health (P16.4).",
+        "description": "Resolved remote-access config + live tunnel health (P16.4). Token is never returned.",
         "operationId": "get_remote_v1_admin_remote_get",
         "responses": {
           "200": {
@@ -2931,6 +2931,69 @@
           }
         },
         "summary": "Remote Status"
+      }
+    },
+    "/v1/admin/remote/tunnel/start": {
+      "post": {
+        "description": "Start the managed cloudflared tunnel (named uses the stored token; quick needs none).",
+        "operationId": "tunnel_start_v1_admin_remote_tunnel_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Tunnel Start V1 Admin Remote Tunnel Start Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tunnel Start"
+      }
+    },
+    "/v1/admin/remote/tunnel/stop": {
+      "post": {
+        "operationId": "tunnel_stop_v1_admin_remote_tunnel_stop_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Tunnel Stop V1 Admin Remote Tunnel Stop Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Tunnel Stop"
       }
     },
     "/v1/admin/retention/prune": {

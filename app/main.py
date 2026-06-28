@@ -65,6 +65,23 @@ def _reprovision_cups(ctx: Any) -> None:
             log.warning("cups_reprovision_failed", printer=p.id, error=str(e))
 
 
+async def _autostart_tunnel(ctx: Any) -> None:
+    """Re-start the managed tunnel on boot if it was enabled (durable across restarts)."""
+    from .remote import resolve_remote, tunnel_token
+
+    r = resolve_remote(ctx)
+    if not r["tunnel_enabled"]:
+        return
+    try:
+        if r["tunnel_mode"] == "quick":
+            await ctx.tunnel.start(metrics="127.0.0.1:2000")
+        elif tunnel_token(ctx):
+            await ctx.tunnel.start(token=tunnel_token(ctx), metrics="127.0.0.1:2000")
+        log.info("tunnel_autostarted", mode=r["tunnel_mode"])
+    except Exception as e:  # best-effort
+        log.warning("tunnel_autostart_failed", error=str(e))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
@@ -81,11 +98,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.ctx = ctx
     worker.start()
     _reprovision_cups(ctx)
+    await _autostart_tunnel(ctx)
     log.info("startup", data_dir=str(settings.data_dir))
     try:
         yield
     finally:
         log.info("shutdown_begin")
+        await ctx.tunnel.stop()
         await worker.stop()
         ctx.db.close()
         log.info("shutdown_complete")

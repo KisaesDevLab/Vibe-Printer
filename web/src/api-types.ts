@@ -609,7 +609,7 @@ export interface paths {
         };
         /**
          * Get Remote
-         * @description Resolved remote-access config + live tunnel health (P16.4).
+         * @description Resolved remote-access config + live tunnel health (P16.4). Token is never returned.
          */
         get: operations["get_remote_v1_admin_remote_get"];
         /**
@@ -638,6 +638,43 @@ export interface paths {
         get: operations["remote_status_v1_admin_remote_status_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/remote/tunnel/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tunnel Start
+         * @description Start the managed cloudflared tunnel (named uses the stored token; quick needs none).
+         */
+        post: operations["tunnel_start_v1_admin_remote_tunnel_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/remote/tunnel/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tunnel Stop */
+        post: operations["tunnel_stop_v1_admin_remote_tunnel_stop_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2887,6 +2924,65 @@ export interface operations {
         };
     };
     remote_status_v1_admin_remote_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    tunnel_start_v1_admin_remote_tunnel_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tunnel_stop_v1_admin_remote_tunnel_stop_post: {
         parameters: {
             query?: never;
             header?: never;

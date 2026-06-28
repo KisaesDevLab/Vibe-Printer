@@ -33,7 +33,15 @@ def resolve_remote(ctx: Context) -> dict[str, Any]:
     bypass = cfg.get("access_lan_bypass")
     out["access_lan_bypass"] = s.access_lan_bypass if bypass is None else bool(bypass)
     out["access_enabled"] = bool(out["access_team_domain"] and out["access_aud"])
+    # Managed tunnel (token is write-only — never returned).
+    out["tunnel_mode"] = cfg.get("tunnel_mode", "named")
+    out["tunnel_enabled"] = bool(cfg.get("tunnel_enabled", False))
+    out["tunnel_token_set"] = bool(cfg.get("tunnel_token"))
     return out
+
+
+def tunnel_token(ctx: Context) -> str:
+    return ctx.registry.get_device()["config"].get("remote_access", {}).get("tunnel_token", "")
 
 
 async def tunnel_status(metrics_url: str) -> str:
