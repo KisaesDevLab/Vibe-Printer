@@ -37,6 +37,7 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
   - [Printer pools / failover](#printer-pools--failover)
 - [Authentication](#authentication)
 - [API reference](#api-reference)
+- [Template variables](#template-variables)
 - [Document format schema (thermal)](#document-format-schema-thermal)
 - [PDF templates (office)](#pdf-templates-office)
 - [Configuration](#configuration-environment-variables)
@@ -416,6 +417,55 @@ Every error: `{"error":{"code","message","details?}}`. Stable machine codes:
 `unauthorized` · `forbidden` · `validation_error` · `unknown_printer` · `not_found` ·
 `unsupported_for_printer` · `idempotency_conflict` · `conflict` · `rate_limited` · `queue_full` ·
 `quota_exceeded` · `render_error` · `printer_unreachable` · `internal_error`.
+
+---
+
+## Template variables
+
+Every renderable string — thermal element values, PDF template HTML/CSS, and PDF-overlay fields —
+is a **Jinja2** template merged at print time with the request body's **`data`** object (or the
+saved `sample_data` for previews). The engine is **sandboxed** (no `__dunder__`/attribute escapes)
+and **HTML-autoescaped** for PDF output, so values from `data` can't inject markup or break out.
+
+### Where to reference variables, and how
+
+| Surface | Syntax | Notes |
+|---|---|---|
+| **Thermal format** (`elements[].value`, table `row` cells, `qr`/`barcode` value, `image` asset) | `{{ data.field }}`, nested `{{ data.client.name }}` | merged from `data` |
+| **PDF template** (HTML + CSS) | `{{ data.field }}` **or** top-level `{{ field }}` | full Jinja: `{% for %}`, `{% if %}`, filters |
+| **PDF overlay** (field `value`) | `{{ data.field }}` | text/QR field values |
+
+In **PDF templates** the request fields are exposed both under `data.*` and at the top level, so a
+designer-authored template can use `{{ client.name }}` or `{{ data.client.name }}` interchangeably.
+
+### `data` is what you send
+
+```jsonc
+POST /v1/print
+{ "printer": 1, "format": 2,
+  "data": { "company": "Acme", "total": "24.48",
+            "lines": [ {"name": "Widget", "qty": "2", "amt": "9.98"} ] } }
+```
+…then `{{ data.company }}`, `{{ data.total }}`, and a row loop over `data.lines` resolve. For a
+preview with no `data`, the format/template's saved `sample_data` is used.
+
+### Jinja you can use
+
+- **Interpolation:** `{{ data.x }}`, nested `{{ data.a.b }}`.
+- **Loops** (PDF/HTML): `{% for li in data.lines %}{{ li.name }} {{ li.amt }}{% endfor %}`.
+  Thermal tables loop declaratively instead — `"rows_from": "data.lines"` + `"row": ["{{ item.name }}", "{{ item.amt }}"]`.
+- **Conditionals:** `{% if data.url %}…{% endif %}`.
+- **Defaults / filters:** `{{ data.note | default('—') }}`, `{{ data.name | upper }}`.
+- **QR images in PDF templates:** `<img src="{{ data.url | qr_data_uri(box_size=4, ec='H') }}">`
+  (the `qr_data_uri` filter returns an embedded PNG data-URI). Thermal/overlay output uses the
+  dedicated `qr` element/field instead.
+
+### Missing variables
+
+Undefined variables raise `render_error` (StrictUndefined) rather than printing blanks — so a typo
+or absent field fails loudly. Keep `data` complete, or guard with `{% if %}` / the `default` filter.
+Capability-aware rendering also rejects elements a printer can't do (e.g. `qr` on a non-QR printer)
+with `unsupported_for_printer`.
 
 ---
 
