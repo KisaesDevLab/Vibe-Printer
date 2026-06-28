@@ -4,8 +4,11 @@ import * as pdfjs from "pdfjs-dist";
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
 import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
-import { api, Overlay, OverlayField } from "../api";
+import { api, Overlay, OverlayField, Printer } from "../api";
 import { CodeEditor } from "../components/CodeEditor";
+import { ConfirmDelete } from "../components/ConfirmDelete";
+
+const PDF_TYPES = ["cups", "ipp_network", "virtual"];
 
 pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker();
 
@@ -59,7 +62,17 @@ export function OverlaysPage() {
     queryFn: () => api.get<Overlay[]>("/v1/admin/overlays"),
   });
   const [selected, setSelected] = useState<Overlay | null>(null);
+  const [confirm, setConfirm] = useState<Overlay | null>(null);
   const [err, setErr] = useState("");
+
+  const remove = useMutation({
+    mutationFn: (id: number) => api.del(`/v1/admin/overlays/${id}`),
+    onSuccess: (_d, id) => {
+      qc.invalidateQueries({ queryKey: ["overlays"] });
+      setConfirm(null);
+      setSelected((s) => (s && s.id === id ? null : s));
+    },
+  });
 
   const create = useMutation({
     mutationFn: async (file: File) => {
@@ -98,7 +111,10 @@ export function OverlaysPage() {
               <tr key={o.id}>
                 <td>{o.name}</td>
                 <td className="muted">v{o.version}</td>
-                <td><button className="ghost" onClick={() => setSelected(o)}>Edit</button></td>
+                <td className="row">
+                  <button className="ghost" onClick={() => setSelected(o)}>Edit</button>
+                  <button className="danger" onClick={() => setConfirm(o)}>Delete</button>
+                </td>
               </tr>
             ))}
             {overlays?.length === 0 && (
@@ -108,6 +124,16 @@ export function OverlaysPage() {
         </table>
       </div>
       {selected && <OverlayEditor key={selected.id} overlay={selected} />}
+
+      {confirm && (
+        <ConfirmDelete
+          what="overlay"
+          name={confirm.name}
+          busy={remove.isPending}
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => remove.mutate(confirm.id)}
+        />
+      )}
     </div>
   );
 }
@@ -124,6 +150,29 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
   const [sel, setSel] = useState<number | null>(null);
   const [preview, setPreview] = useState("");
   const [err, setErr] = useState("");
+  const [printerId, setPrinterId] = useState<number | "">("");
+  const [toast, setToast] = useState("");
+
+  const { data: printers } = useQuery({
+    queryKey: ["printers"],
+    queryFn: () => api.get<Printer[]>("/v1/admin/printers"),
+  });
+  const pdfPrinters = (printers ?? []).filter((p) => PDF_TYPES.includes(p.type));
+
+  const testPrint = useMutation({
+    mutationFn: () =>
+      api.post<{ job_id: string }>("/v1/print", {
+        printer: Number(printerId),
+        overlay: overlay.id,
+        data: JSON.parse(sample),
+      }),
+    onSuccess: (d) => {
+      qc.invalidateQueries({ queryKey: ["jobs"] });
+      setToast(`Test print queued — job ${d.job_id.slice(0, 8)} (see Jobs tab)`);
+      setTimeout(() => setToast(""), 6000);
+    },
+    onError: (e: Error) => setToast(`Test print failed: ${e.message}`),
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const docRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
@@ -327,6 +376,24 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
             <button onClick={() => save.mutate()} disabled={save.isPending}>Save</button>
             <button className="ghost" onClick={doPreview}>Preview PDF</button>
           </div>
+
+          <label style={{ marginTop: 10 }}>Test print to a printer (uses the sample data)</label>
+          <div className="row">
+            <select value={printerId}
+                    onChange={(e) => setPrinterId(e.target.value ? Number(e.target.value) : "")}
+                    style={{ maxWidth: 240 }}>
+              <option value="">Select a printer…</option>
+              {pdfPrinters.map((p) => (
+                <option key={p.id} value={p.id}>{p.name} ({p.type})</option>
+              ))}
+            </select>
+            <button className="ghost" disabled={!printerId || testPrint.isPending}
+                    onClick={() => testPrint.mutate()}>
+              Test print
+            </button>
+          </div>
+          {toast && <p className="muted">{toast}</p>}
+
           {preview && (
             <iframe src={preview} title="PDF preview" width="100%" height="320"
                     style={{ marginTop: 10, border: "1px solid var(--border)" }} />
