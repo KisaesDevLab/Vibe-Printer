@@ -1,0 +1,227 @@
+# Default formats + templates shipped with the build. Loaded create-if-missing on
+# startup (never overwrites edits). Add entries here to ship new defaults.
+formats:
+- name: Stripe Payment Receipt
+  elements:
+    elements:
+    - type: text
+      value: '{{ data.merchant }}'
+      align: center
+      bold: true
+      size:
+      - 2
+      - 2
+    - type: text
+      value: Payment Receipt
+      align: center
+    - type: text
+      value: '{{ data.date }}'
+      align: center
+    - type: rule
+    - type: table
+      cols:
+      - 35
+      - 12
+      align:
+      - left
+      - right
+      rows_from: data.line_items
+      row:
+      - '{{ item.name }}'
+      - '{{ item.amount }}'
+    - type: rule
+    - type: text
+      value: TOTAL  {{ data.amount }} {{ data.currency }}
+      align: right
+      bold: true
+    - type: feed
+      lines: 1
+    - type: text
+      value: Paid with {{ data.card_brand }} ****{{ data.card_last4 }}
+      align: left
+    - type: text
+      value: 'Status: {{ data.status }}'
+      align: left
+    - type: text
+      value: 'Receipt #: {{ data.receipt_number }}'
+      align: left
+    - type: text
+      value: 'Charge: {{ data.charge_id }}'
+      align: left
+    - type: text
+      value: '{{ data.customer_email }}'
+      align: left
+    - type: rule
+    - type: qr
+      value: '{{ data.receipt_url }}'
+      size: 6
+    - type: text
+      value: Scan for your full receipt
+      align: center
+    - type: feed
+      lines: 1
+    - type: text
+      value: Thank you!
+      align: center
+    - type: feed
+      lines: 2
+    - type: cut
+  sample_data:
+    merchant: Acme Co
+    date: 2026-06-27 15:42
+    amount: '24.48'
+    currency: USD
+    card_brand: Visa
+    card_last4: '4242'
+    status: SUCCEEDED
+    receipt_number: 2845-1042
+    charge_id: ch_3PabcXYZ12345
+    customer_email: jane@example.com
+    line_items:
+    - name: Widget
+      amount: '9.98'
+    - name: Gadget Pro
+      amount: '14.50'
+    receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ
+templates:
+- name: Stripe Payment Receipt (PDF)
+  html: '<div class="receipt"><h1>{{ data.merchant }}</h1><div class="sub">Payment Receipt &middot; {{ data.date }}</div><table class="items"><thead><tr><th>Item</th><th class="r">Amount</th></tr></thead><tbody>{%
+    for li in data.line_items %}<tr><td>{{ li.name }}</td><td class="r">{{ li.amount }}</td></tr>{% endfor %}</tbody></table><div class="total">TOTAL&nbsp;&nbsp;{{ data.amount }} {{ data.currency }}</div><table
+    class="meta"><tr><td>Paid with</td><td>{{ data.card_brand }} ****{{ data.card_last4 }}</td></tr><tr><td>Status</td><td>{{ data.status }}</td></tr><tr><td>Receipt #</td><td>{{ data.receipt_number }}</td></tr><tr><td>Charge</td><td>{{
+    data.charge_id }}</td></tr><tr><td>Email</td><td>{{ data.customer_email }}</td></tr></table>{% if data.receipt_url %}<div class="qr"><img src="{{ data.receipt_url | qr_data_uri(box_size=4) }}"><div>Scan
+    for your full receipt</div></div>{% endif %}<div class="thanks">Thank you!</div></div>'
+  css: 'body{font-family:Helvetica,Arial,sans-serif;color:#1a1a1a}.receipt{max-width:440px;margin:0 auto}h1{margin:0;font-size:26px}.sub{color:#666;margin-bottom:18px}table{width:100%;border-collapse:collapse}.items
+    th,.items td{text-align:left;padding:6px 0;border-bottom:1px solid #eee}.r{text-align:right}.total{text-align:right;font-size:18px;font-weight:bold;margin:12px 0 18px}.meta td{padding:3px 0;color:#444}.meta
+    td:first-child{color:#888;width:90px}.qr{text-align:center;margin-top:26px}.qr img{width:120px;height:120px}.qr div{color:#888;font-size:12px;margin-top:6px}.thanks{text-align:center;margin-top:18px;font-weight:bold}'
+  page_setup:
+    size: Letter
+    margins: 2cm
+  sample_data:
+    merchant: Acme Co
+    date: 2026-06-27 15:42
+    amount: '24.48'
+    currency: USD
+    card_brand: Visa
+    card_last4: '4242'
+    status: SUCCEEDED
+    receipt_number: 2845-1042
+    charge_id: ch_3PabcXYZ12345
+    customer_email: jane@example.com
+    line_items:
+    - name: Widget
+      amount: '9.98'
+    - name: Gadget Pro
+      amount: '14.50'
+    receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ
+- name: File Routing Sheet
+  html: "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\"/>\n<style>\n  * { box-sizing: border-box; }\n  body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11px; margin: 0;\
+    \ }\n  .sheet { padding: 4px 2px; page-break-after: always; }\n  .sheet:last-child { page-break-after: auto; }\n  .clienthead { text-align: left; font-size: 16px; font-weight: bold; margin-bottom: 2px;\
+    \ }\n  .title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }\n  .section { background: #111;\
+    \ color: #fff; font-weight: bold; padding: 2px 6px; margin: 8px 0 4px; font-size: 11px; }\n  .row { margin: 3px 0; }\n  .lab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333;\
+    \ }\n  .cval { border-bottom: 1px solid #999; display: inline-block; min-width: 60%; }\n  table { width: 100%; border-collapse: collapse; }\n  .contactlog td { border: 1px solid #ccc; padding: 3px 6px;\
+    \ font-size: 10px; }\n  .dateby { width: 45%; }\n  .engtbl td { border: 1px solid #ccc; padding: 4px 6px; width: 50%; vertical-align: top; }\n  .contacts td.contact { border: 1px solid #ccc; padding:\
+    \ 4px 6px; width: 50%; vertical-align: top; }\n  .contact .who { font-weight: bold; font-size: 10px; color: #333; }\n  .contact .nm { font-weight: bold; }\n  .contact .ln { font-size: 10px; }\n  .grp\
+    \ { margin: 6px 0; }\n  .grplab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333; margin-bottom: 2px; }\n  .cb { display: inline-block; margin-right: 12px; font-size: 10px;\
+    \ white-space: nowrap; }\n  .box { display: inline-block; width: 10px; height: 10px; border: 1px solid #333; margin-right: 4px; vertical-align: middle; }\n  .signoff td { border: 1px solid #ccc; padding:\
+    \ 8px 6px; text-align: center; font-size: 10px; font-weight: bold; width: 33.33%; }\n  .notes { border: 1px solid #999; min-height: 90px; padding: 6px; white-space: pre-wrap; }\n</style>\n</head>\n\
+    <body>\n  <div class=\"sheet\">\n    <div class=\"clienthead\">CLIENT: {{client.name}}</div>\n    <div class=\"title\">FILE ROUTING SHEET</div>\n\n    <table class=\"contactlog\">\n      <tr>\n    \
+    \    <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span class=\"\
+    cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span class=\"box\"></span>SMS</span></td>\n      </tr>\n      <tr>\n        <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"\
+    chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span class=\"cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span\
+    \ class=\"box\"></span>SMS</span></td>\n      </tr>\n      <tr>\n        <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span\
+    \ class=\"cb\"><span class=\"box\"></span>VM</span><span class=\"cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span class=\"box\"></span>SMS</span></td>\n      </tr>\n      <tr>\n   \
+    \     <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span\
+    \ class=\"cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span class=\"box\"></span>SMS</span></td>\n      </tr>\n    </table>\n\n    <div class=\"section\">I. ENGAGEMENT</div>\n    <table\
+    \ class=\"engtbl\">\n      <tr>\n        <td><span class=\"lab\">Engagement:</span> {{engagementName}}</td>\n        <td><span class=\"lab\">Period:</span> {{periodLabel}}</td>\n      </tr>\n      <tr>\n\
+    \        <td><span class=\"lab\">Owner:</span> {{partnerName}}</td>\n        <td><span class=\"lab\">Manager:</span> {{managerName}}</td>\n      </tr>\n      <tr>\n        <td><span class=\"lab\">Status:</span>\
+    \ <strong>{{workflowStateLabel}}</strong></td>\n        <td><span class=\"lab\">Date Project Due:</span> {{dueDate}}</td>\n      </tr>\n      <tr>\n        <td colspan=\"2\"><span class=\"lab\">Assignees:</span>\
+    \ {{assignees}}</td>\n      </tr>\n    </table>\n\n    <table class=\"contacts\">\n      <tr>\n        <td class=\"contact\">\n          <div class=\"who\">PRIMARY</div>\n          <div class=\"nm\"\
+    >{{primary.name}}</div>\n          <div class=\"ln\">Email: {{primary.email}}</div>\n          <div class=\"ln\">Home: {{primary.home}}</div>\n          <div class=\"ln\">Mobile: {{primary.mobile}}</div>\n\
+    \        </td>\n        <td class=\"contact\">\n          <div class=\"who\">SECONDARY</div>\n          <div class=\"nm\">{{secondary.name}}</div>\n          <div class=\"ln\">Email: {{secondary.email}}</div>\n\
+    \          <div class=\"ln\">Home: {{secondary.home}}</div>\n          <div class=\"ln\">Mobile: {{secondary.mobile}}</div>\n        </td>\n      </tr>\n    </table>\n    <div class=\"row\"><span class=\"\
+    lab\">Address:</span> <span class=\"cval\">{{client.address}}</span></div>\n\n    <div class=\"grp\">\n      <div class=\"grplab\">DELIVER PROJECT VIA</div>\n      <span class=\"cb\"><span class=\"\
+    box\"></span>Pickup Paper</span><span class=\"cb\"><span class=\"box\"></span>Email</span><span class=\"cb\"><span class=\"box\"></span>SafeSend</span><span class=\"cb\"><span class=\"box\"></span>Priority\
+    \ Mail</span><span class=\"cb\"><span class=\"box\"></span>Meeting</span><span class=\"cb\"><span class=\"box\"></span>Portal</span><span class=\"cb\"><span class=\"box\"></span>E-Sign</span>\n    </div>\n\
+    \    <div class=\"grp\">\n      <div class=\"grplab\">PROJECT DOCUMENTS STORED IN</div>\n      <span class=\"cb\"><span class=\"box\"></span>Paper Folder</span><span class=\"cb\"><span class=\"box\"\
+    ></span>Email</span><span class=\"cb\"><span class=\"box\"></span>Scanned to WP Folder</span><span class=\"cb\"><span class=\"box\"></span>Inbox Folder</span><span class=\"cb\"><span class=\"box\"></span>Portal</span>\n\
+    \    </div>\n    <div class=\"grp\">\n      <div class=\"grplab\">CONTACT WHEN READY</div>\n      <span class=\"cb\"><span class=\"box\"></span>Phone</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span\
+    \ class=\"cb\"><span class=\"box\"></span>Email</span><span class=\"cb\"><span class=\"box\"></span>SMS</span>\n    </div>\n\n    <table class=\"signoff\">\n      <tr>\n        <td>PARTNER REVIEW<br/>___/___/____</td>\n\
+    \        <td>STAFF PREPARER<br/>___/___/____</td>\n        <td>ASSEMBLED/SENT BY<br/>___/___/____</td>\n      </tr>\n      <tr>\n        <td>PICKUP ___/___/___</td>\n        <td>SIGNATURE</td>\n   \
+    \     <td>CONFIRMATION</td>\n      </tr>\n    </table>\n\n    <div class=\"section\">III. SPECIAL INSTRUCTIONS / HANDLING / NOTES</div>\n    <div class=\"notes\">{{note}}</div>\n  </div>\n</body>\n\
+    </html>"
+  css: '* { box-sizing: border-box; }
+
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11px; margin: 0; }
+
+    .sheet { padding: 4px 2px; page-break-after: always; }
+
+    .sheet:last-child { page-break-after: auto; }
+
+    .clienthead { text-align: left; font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+
+    .title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
+
+    .section { background: #111; color: #fff; font-weight: bold; padding: 2px 6px; margin: 8px 0 4px; font-size: 11px; }
+
+    .row { margin: 3px 0; }
+
+    .lab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333; }
+
+    .cval { border-bottom: 1px solid #999; display: inline-block; min-width: 60%; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    .contactlog td { border: 1px solid #ccc; padding: 3px 6px; font-size: 10px; }
+
+    .dateby { width: 45%; }
+
+    .engtbl td { border: 1px solid #ccc; padding: 4px 6px; width: 50%; vertical-align: top; }
+
+    .contacts td.contact { border: 1px solid #ccc; padding: 4px 6px; width: 50%; vertical-align: top; }
+
+    .contact .who { font-weight: bold; font-size: 10px; color: #333; }
+
+    .contact .nm { font-weight: bold; }
+
+    .contact .ln { font-size: 10px; }
+
+    .grp { margin: 6px 0; }
+
+    .grplab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333; margin-bottom: 2px; }
+
+    .cb { display: inline-block; margin-right: 12px; font-size: 10px; white-space: nowrap; }
+
+    .box { display: inline-block; width: 10px; height: 10px; border: 1px solid #333; margin-right: 4px; vertical-align: middle; }
+
+    .signoff td { border: 1px solid #ccc; padding: 8px 6px; text-align: center; font-size: 10px; font-weight: bold; width: 33.33%; }
+
+    .notes { border: 1px solid #999; min-height: 90px; padding: 6px; white-space: pre-wrap; }'
+  page_setup:
+    size: Letter
+    margins: 2cm
+  sample_data:
+    client:
+      name: Riverside Holdings LLC
+      address: 123 Main St, Suite 400, Springfield, IL 62704
+    engagementName: 2025 Form 1120 - Corporate Income Tax
+    periodLabel: FY 2025 (Jan 1 - Dec 31, 2025)
+    partnerName: J. Carter, CPA
+    managerName: P. Nguyen
+    workflowStateLabel: In Review
+    dueDate: '2026-04-15'
+    assignees: M. Lopez, T. Brooks
+    primary:
+      name: Dana Whitfield
+      email: dana@riverside.example
+      home: (217) 555-0142
+      mobile: (217) 555-0199
+    secondary:
+      name: Sam Ortega
+      email: sam@riverside.example
+      home: (217) 555-0170
+      mobile: (217) 555-0188
+    note: 'Awaiting K-1s from two partnerships.
+
+      Client prefers SafeSend for delivery.
+
+      Confirm extension if docs not received by 3/25.'

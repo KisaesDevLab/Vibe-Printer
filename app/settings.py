@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     timezone: str = "UTC"
     enable_metrics: bool = True
     image_digest: str = "dev"  # set by the deploy/update flow for /v1/version (P27.4)
+    # seed bundled default formats/templates on startup (create-if-missing)
+    load_defaults: bool = True
 
     # --- Compliance (P29) ---
     store_payloads: bool = True  # False => keep only a content hash + metadata after print

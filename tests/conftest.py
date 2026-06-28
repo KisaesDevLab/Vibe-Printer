@@ -14,6 +14,7 @@ def client(tmp_path, monkeypatch) -> Iterator[TestClient]:
     monkeypatch.setenv("VIBE_PRINT_SECRET", "test-secret")
     monkeypatch.setenv("VIBE_PRINT_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("VIBE_PRINT_WORKER_POLL_SECONDS", "0.05")
+    monkeypatch.setenv("VIBE_PRINT_LOAD_DEFAULTS", "0")  # keep tests isolated; see test_defaults
 
     from app.settings import get_settings
 

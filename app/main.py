@@ -97,6 +97,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ctx.worker = worker
     app.state.ctx = ctx
     worker.start()
+    if settings.load_defaults:
+        from .defaults import load_defaults
+
+        created = load_defaults(ctx)
+        if created["formats"] or created["templates"]:
+            log.info("defaults_loaded", **created)
     _reprovision_cups(ctx)
     await _autostart_tunnel(ctx)
     log.info("startup", data_dir=str(settings.data_dir))
