@@ -327,7 +327,10 @@ function OverlayEditor({ overlay }: { overlay: Overlay }) {
             <button onClick={() => save.mutate()} disabled={save.isPending}>Save</button>
             <button className="ghost" onClick={doPreview}>Preview PDF</button>
           </div>
-          {preview && <embed src={preview} type="application/pdf" width="100%" height="320" style={{ marginTop: 10 }} />}
+          {preview && (
+            <iframe src={preview} title="PDF preview" width="100%" height="320"
+                    style={{ marginTop: 10, border: "1px solid var(--border)" }} />
+          )}
         </div>
       </div>
     </div>

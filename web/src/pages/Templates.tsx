@@ -120,7 +120,8 @@ function TemplateEditor({ template }: { template: Template }) {
       </div>
       <label>Live PDF preview</label>
       {preview ? (
-        <embed src={preview} type="application/pdf" width="100%" height="400" />
+        <iframe src={preview} title="PDF preview" width="100%" height="400"
+                style={{ border: "1px solid var(--border)" }} />
       ) : (
         <p className="muted">…</p>
       )}

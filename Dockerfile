@@ -32,7 +32,11 @@ RUN curl -fsSL -o /usr/local/bin/cloudflared \
 WORKDIR /srv
 COPY pyproject.toml ./
 COPY app ./app
-RUN pip install --no-cache-dir ".[pdf,cups,usb,access,encrypt]" \
+RUN pip install --no-cache-dir ".[pdf,cups,usb,access]" \
+    # SQLCipher-at-rest is best-effort: its wheel is amd64-only, so skip on arches without one
+    # (the app degrades gracefully — encryption simply unavailable unless the driver is present).
+    && (pip install --no-cache-dir "sqlcipher3-binary>=0.5" \
+        || echo "WARN: sqlcipher3-binary unavailable for this arch; SQLCipher-at-rest disabled") \
     && apt-get purge -y gcc python3-dev libcups2-dev \
     && apt-get autoremove -y
 
