@@ -31,6 +31,15 @@ def test_missing_var_raises_render_error():
     assert e.value.code == "render_error"
 
 
+def test_pdf_context_exposes_top_level_and_data_namespace():
+    from app.templating import _pdf_context
+
+    ctx = _pdf_context({"client": {"name": "Acme"}, "note": "hi"})
+    assert ctx["client"]["name"] == "Acme"  # {{ client.name }}
+    assert ctx["note"] == "hi"  # {{ note }}
+    assert ctx["data"]["client"]["name"] == "Acme"  # {{ data.client.name }} still works
+
+
 def test_sandbox_blocks_dunder_access():
     with pytest.raises(ApiError):
         merge_format(

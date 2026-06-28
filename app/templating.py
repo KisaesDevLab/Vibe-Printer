@@ -122,6 +122,14 @@ def _merge_table(el: dict[str, Any], data: dict[str, Any], ctx: dict[str, Any]) 
     return merged
 
 
+def _pdf_context(data: dict[str, Any]) -> dict[str, Any]:
+    """Expose request fields both under `data.*` and at the top level, so templates can use
+    either `{{ data.client.name }}` or `{{ client.name }}`."""
+    if isinstance(data, dict):
+        return {**data, "data": data}
+    return {"data": data}
+
+
 def render_pdf(html: str, css: str, page_setup: dict[str, Any], data: dict[str, Any],
                assets_dir: Path) -> bytes:
     """Render an HTML/CSS template to PDF bytes via WeasyPrint, sandboxed to local assets."""
@@ -133,7 +141,7 @@ def render_pdf(html: str, css: str, page_setup: dict[str, Any], data: dict[str, 
             "render_error", "PDF rendering unavailable: install the 'pdf' extra (WeasyPrint)."
         ) from e
 
-    body = _render_str(html, {"data": data}, html=True)
+    body = _render_str(html, _pdf_context(data), html=True)
     page_css = _page_css(page_setup)
     assets_root = assets_dir.resolve()
 
