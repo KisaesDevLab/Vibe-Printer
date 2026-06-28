@@ -173,6 +173,34 @@ def test_print(printer_id: int, ctx: Context = Depends(get_ctx)) -> dict[str, An
     return {"job_id": job["id"], "status": job["status"]}
 
 
+@router.post("/printers/{printer_id}/open-drawer")
+def open_drawer(
+    printer_id: int,
+    body: dict[str, Any] = Body(default={}),
+    ctx: Context = Depends(get_ctx),
+    auth: AuthInfo = Depends(require_auth),
+) -> dict[str, Any]:
+    """Kick the cash drawer wired to a receipt printer (no receipt printed)."""
+    printer = ctx.registry.get_printer(printer_id)
+    caps = ctx.backend_capabilities(printer)
+    if not caps.pulse:
+        raise ApiError("unsupported_for_printer", "printer has no cash-drawer port")
+    pulse: dict[str, Any] = {"type": "pulse"}
+    for k in ("pin", "on_ms", "off_ms"):
+        if body.get(k) is not None:
+            pulse[k] = body[k]
+    job = ctx.jobs.enqueue(
+        printer_id=printer_id,
+        payload={"document": {"elements": [pulse]}, "data": {}, "copies": 1},
+        global_max=ctx.settings.queue_max_depth,
+        per_printer_max=ctx.settings.per_printer_max_depth,
+    )
+    ctx.audit.config_change(
+        entity="printer", entity_id=str(printer_id), action="open_drawer", real_ip=auth.real_ip
+    )
+    return {"job_id": job["id"], "status": job["status"]}
+
+
 @router.get("/printers/{printer_id}/status")
 async def printer_status(printer_id: int, ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
     printer = ctx.registry.get_printer(printer_id)

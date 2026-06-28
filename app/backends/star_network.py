@@ -20,7 +20,7 @@ class StarNetworkBackend:
 
     def capabilities(self) -> Capabilities:
         return Capabilities(
-            cut=True, qr=False, barcode=[], raster=False, pulse=False, pdf=False,
+            cut=True, qr=False, barcode=[], raster=False, pulse=True, pdf=False,
             columns=self.params.get("columns", 48),
         )
 

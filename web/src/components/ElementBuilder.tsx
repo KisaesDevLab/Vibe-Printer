@@ -21,7 +21,7 @@ const DEFAULTS: Record<string, El> = {
   barcode: { type: "barcode", format: "CODE128", value: "{{ data.ref }}" },
   image: { type: "image", asset: "logo" },
   feed: { type: "feed", lines: 1 },
-  pulse: { type: "pulse" },
+  pulse: { type: "pulse", pin: 2 },
   cut: { type: "cut" },
 };
 
@@ -147,6 +147,16 @@ function ElementFields({ el, onChange }: { el: El; onChange: (patch: Partial<El>
           value={Number(el.lines ?? 1)}
           onChange={(e) => onChange({ lines: Number(e.target.value) })}
         />
+      );
+    case "pulse":
+      return (
+        <>
+          <label>Cash-drawer pin</label>
+          <select value={Number(el.pin ?? 2)} onChange={(e) => onChange({ pin: Number(e.target.value) })}>
+            <option value={2}>pin 2</option>
+            <option value={5}>pin 5</option>
+          </select>
+        </>
       );
     case "table":
       return (

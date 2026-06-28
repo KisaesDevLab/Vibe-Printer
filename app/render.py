@@ -39,6 +39,15 @@ def _qr_kwargs(el: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+def _drawer_kick(el: dict[str, Any]) -> bytes:
+    """ESC/POS cash-drawer pulse: ESC p m t1 t2 (m=0→pin2, m=1→pin5; times in 2ms units)."""
+    pin = int(el.get("pin", 2))
+    m = 0 if pin == 2 else 1
+    on = max(1, min(255, int(el.get("on_ms", 100)) // 2))
+    off = max(1, min(255, int(el.get("off_ms", 200)) // 2))
+    return b"\x1bp" + bytes([m, on, off])
+
+
 # --------------------------------------------------------------------------- text layout helpers
 def _fit(text: str, width: int, align: str) -> str:
     text = text[:width]
@@ -145,7 +154,7 @@ def render_escpos(
             d.image(img)
         elif t == "pulse":
             if caps.pulse:
-                d.cashdraw(2)
+                d._raw(_drawer_kick(el))
         elif t == "feed":
             d.ln(int(el.get("lines", 1)))
         elif t == "cut":
@@ -230,7 +239,11 @@ def render_star(
         elif t == "cut":
             if caps.cut:
                 out += esc + b"d\x03"  # partial cut
-        elif t in ("qr", "barcode", "image", "pulse"):
+        elif t == "pulse":
+            # Star Line Mode drawer kick: BEL (07h) = drawer 1, SUB (1Ah) = drawer 2.
+            if caps.pulse:
+                out += b"\x07" if int(el.get("pin", 2)) == 2 else b"\x1a"
+        elif t in ("qr", "barcode", "image"):
             pass  # not modeled in Star Line Mode minimal renderer
         else:
             raise ApiError("validation_error", f"unknown element type: {t}")

@@ -492,6 +492,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/printers/{printer_id}/open-drawer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Drawer
+         * @description Kick the cash drawer wired to a receipt printer (no receipt printed).
+         */
+        post: operations["open_drawer_v1_admin_printers__printer_id__open_drawer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/printers/{printer_id}/provision-queue": {
         parameters: {
             query?: never;
@@ -2592,6 +2612,45 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_drawer_v1_admin_printers__printer_id__open_drawer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                printer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
             /** @description Validation Error */
             422: {

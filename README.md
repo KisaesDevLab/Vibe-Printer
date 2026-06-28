@@ -394,7 +394,7 @@ operator action (resolve / requeue) in the UI or via the admin API.
 | Area | Endpoints |
 |---|---|
 | Device | `GET/PUT /device` |
-| Printers | `GET/POST /printers`, `GET/PUT/DELETE /printers/{id}`, `POST /printers/{id}/test`, `GET /printers/{id}/status`, `POST /printers/{id}/provision-queue`, `POST /discover` |
+| Printers | `GET/POST /printers`, `GET/PUT/DELETE /printers/{id}`, `POST /printers/{id}/test`, `POST /printers/{id}/open-drawer`, `GET /printers/{id}/status`, `POST /printers/{id}/provision-queue`, `POST /discover` |
 | Formats | `GET/POST /formats`, `GET/PUT/DELETE /formats/{id}`, `POST /formats/{id}/preview` |
 | Templates | `GET/POST /templates`, `GET/PUT/DELETE /templates/{id}`, `POST /templates/{id}/preview` |
 | Overlays | `GET/POST /overlays`, `GET/PUT/DELETE /overlays/{id}`, `POST /overlays/{id}/preview`, `GET /overlays/{id}/base`, `GET /overlays/{id}/pages` |
@@ -452,7 +452,7 @@ A document is `{ "elements": [ … ] }`. String fields are Jinja templates merge
 | `barcode` | `format` (CODE128/EAN13/CODE39/UPC-A), `value` |
 | `image` | `asset` (uploaded asset name; scaled/dithered to paper width) |
 | `feed` | `lines` |
-| `pulse` | — (cash-drawer kick) |
+| `pulse` | `pin` (2 or 5), `on_ms`, `off_ms` — cash-drawer kick |
 | `cut` | — |
 
 Capability-aware: an element a printer can't do (e.g. QR on a printer without QR) returns

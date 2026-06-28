@@ -2598,6 +2598,60 @@
         "summary": "Update Printer"
       }
     },
+    "/v1/admin/printers/{printer_id}/open-drawer": {
+      "post": {
+        "description": "Kick the cash drawer wired to a receipt printer (no receipt printed).",
+        "operationId": "open_drawer_v1_admin_printers__printer_id__open_drawer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "default": {},
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Open Drawer V1 Admin Printers  Printer Id  Open Drawer Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Drawer"
+      }
+    },
     "/v1/admin/printers/{printer_id}/provision-queue": {
       "post": {
         "description": "Create/configure a CUPS queue from the registry (P6.1).",

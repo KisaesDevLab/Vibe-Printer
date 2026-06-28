@@ -91,6 +91,15 @@ export function PrintersPage() {
     onError: (e: Error) => setToast(`Test failed: ${e.message}`),
   });
 
+  const drawer = useMutation({
+    mutationFn: (id: number) => api.post(`/v1/admin/printers/${id}/open-drawer`, {}),
+    onSuccess: () => {
+      setToast("Cash drawer kick sent");
+      setTimeout(() => setToast(""), 4000);
+    },
+    onError: (e: Error) => setToast(`Drawer failed: ${e.message}`),
+  });
+
   const provision = useMutation({
     mutationFn: (p: Printer) => {
       const uri = p.params.device_uri as string | undefined;
@@ -168,6 +177,12 @@ export function PrintersPage() {
                     <button className="ghost" onClick={() => test.mutate(p.id)}>
                       Test
                     </button>
+                    {pulseCapable(p) && (
+                      <button className="ghost" onClick={() => drawer.mutate(p.id)}
+                              title="Open the cash drawer wired to this printer">
+                        Drawer
+                      </button>
+                    )}
                     {p.type === "cups" && (
                       <button className="ghost" onClick={() => provision.mutate(p)}
                               title="Create/refresh the CUPS queue from the device URI">
@@ -332,6 +347,12 @@ export function PrintersPage() {
       )}
     </div>
   );
+}
+
+function pulseCapable(p: Printer): boolean {
+  const caps = p.capabilities as { pulse?: boolean } | undefined;
+  if (caps && typeof caps.pulse === "boolean") return caps.pulse;
+  return ["escpos_network", "escpos_usb", "star_network", "virtual", "pool"].includes(p.type);
 }
 
 function typeOptions(editing: Printer | null): string[] {
