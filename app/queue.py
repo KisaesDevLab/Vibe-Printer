@@ -484,18 +484,15 @@ class Worker:
             )
             return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
 
-        caps = self.ctx.backend_capabilities(printer)
-
-        if printer.type in ("cups", "ipp_network"):
-            template = self._template(job, payload)
+        # PDF template — any PDF-capable printer (CUPS/IPP, and virtual for paper-free tests).
+        if payload.get("template"):
+            tpl = self.ctx.registry.get_template(int(payload["template"]))
             pdf = render_pdf(
-                template["html"],
-                template["css"],
-                template["page_setup"],
-                data,
-                self.ctx.settings.assets_dir,
+                tpl["html"], tpl["css"], tpl["page_setup"], data, self.ctx.settings.assets_dir
             )
             return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
+
+        caps = self.ctx.backend_capabilities(printer)
 
         # Element-based families (ESC/POS, ZPL, Star) share document/format resolution.
         if payload.get("document"):
@@ -518,9 +515,3 @@ class Worker:
 
         escpos_bytes = render_escpos(elements, printer.params, caps, self.ctx.settings.assets_dir)
         return PrintPayload(kind="escpos", data=escpos_bytes * copies)
-
-    def _template(self, job: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
-        tid = payload.get("template") or job.get("template_id")
-        if not tid:
-            raise ApiError("validation_error", "CUPS print requires a template")
-        return self.ctx.registry.get_template(tid)

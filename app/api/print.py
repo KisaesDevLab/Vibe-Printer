@@ -60,10 +60,25 @@ def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
             "resolved_version": ov["version"],
         }
 
+    # Explicit template → PDF on any PDF-capable printer (incl. virtual, for paper-free tests).
+    if req.template:
+        caps = ctx.backend_capabilities(printer)
+        if "pdf" not in caps.document_formats:
+            raise ApiError("unsupported_for_printer", "printer does not accept PDF templates")
+        tpl = ctx.registry.get_template(req.template)
+        payload["template"] = req.template
+        return {
+            "printer": printer,
+            "payload": payload,
+            "format_id": None,
+            "template_id": req.template,
+            "resolved_version": tpl["version"],
+        }
+
     if printer.type in ("cups", "ipp_network"):
         if req.document or req.format:
             raise ApiError("unsupported_for_printer", "office printers use a PDF template")
-        template_id = template_id or printer.default_template_id
+        template_id = printer.default_template_id
         if not template_id:
             raise ApiError("validation_error", "no template and printer has no default template")
         tpl = ctx.registry.get_template(template_id)

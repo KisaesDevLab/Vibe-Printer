@@ -82,6 +82,29 @@ def test_raw_disabled_by_default(client):
     assert r.status_code == 403
 
 
+def test_template_accepted_on_virtual_printer(client):
+    # A PDF template can be sent to a PDF-capable printer (virtual) for paper-free tests.
+    t = client.post(
+        "/v1/admin/templates", json={"name": "T", "html": "<p>{{ data.x }}</p>"}
+    ).json()
+    pid = client.post(
+        "/v1/admin/printers", json={"name": "V", "params": {"type": "virtual"}}
+    ).json()["id"]
+    r = client.post("/v1/print", json={"printer": pid, "template": t["id"], "data": {"x": "hi"}})
+    assert r.status_code == 200 and r.json()["job_id"]
+
+
+def test_template_rejected_on_thermal_printer(client):
+    t = client.post("/v1/admin/templates", json={"name": "T2", "html": "<p>x</p>"}).json()
+    pid = client.post(
+        "/v1/admin/printers",
+        json={"name": "th", "params": {"type": "escpos_network", "host": "127.0.0.1"}},
+    ).json()["id"]
+    r = client.post("/v1/print", json={"printer": pid, "template": t["id"]})
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "unsupported_for_printer"
+
+
 def test_cups_rejects_document(client):
     p = client.post(
         "/v1/admin/printers",
