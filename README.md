@@ -74,8 +74,8 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
   element builder**), PDF Templates, **PDF Overlays** (pdf.js WYSIWYG), Jobs, **Remote Access**,
   Device. Each content type supports **edit / delete / test-print to a chosen printer** with live
   previews. English + Spanish.
-- **Ships with defaults:** bundled formats/templates (Stripe receipt, File Routing Sheet, Invoice)
-  loaded **create-if-missing** on startup so a fresh appliance is usable immediately.
+- **Ships with defaults:** bundled formats/templates (Stripe receipt, File Routing Sheet, Invoice,
+  #10 Envelope) loaded **create-if-missing** on startup so a fresh appliance is usable immediately.
 - **Remote access from the UI:** run a **Cloudflare Tunnel** as a managed process — **quick** mode
   (instant `*.trycloudflare.com` URL, no account) or **named** (token for a stable hostname);
   LAN + Cloudflare work **at the same time**; optional **Cloudflare Access** JWT enforced only on
