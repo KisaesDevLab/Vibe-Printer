@@ -306,3 +306,43 @@ templates:
     to_address: '42 Placeholder Lane
 
       Springfield, ST 00000'
+- name: Mailing Label 4x3
+  html: "<!DOCTYPE html>\n<html lang=\"en\">\n<head><meta charset=\"utf-8\"><title>Mailing Label 4x3</title></head>\n<body>\n  <div class=\"return\">\n    {% if return_name %}<div class=\"name\">{{ return_name\
+    \ }}</div>{% endif %}\n    {% if return_address %}<div class=\"addr\">{{ return_address }}</div>{% endif %}\n  </div>\n  <div class=\"delivery\">\n    {% if to_name %}<div class=\"name\">{{ to_name\
+    \ }}</div>{% endif %}\n    {% if to_address %}<div class=\"addr\">{{ to_address }}</div>{% endif %}\n  </div>\n</body>\n</html>"
+  css: '/* 4 x 3 in mailing label. Keep content >=0.15in from edges (unprintable border). */
+
+    @page { size: 4in 3in; margin: 0; }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body { font-family: Arial, Helvetica, sans-serif; color: #000; }
+
+
+    /* Return address: top-left, small. */
+
+    .return { position: absolute; top: 0.15in; left: 0.18in; font-size: 8pt; line-height: 1.2; max-width: 2.4in; }
+
+
+    /* Delivery address: dominant block, left-aligned, 12pt, middle/lower area. */
+
+    .delivery { position: absolute; top: 1.15in; left: 0.45in; right: 0.25in; font-size: 12pt; line-height: 1.35; }
+
+
+    .name { font-weight: bold; }
+
+    .addr { white-space: pre-line; }'
+  page_setup:
+    size: 4in 3in
+    margins: '0'
+  sample_data:
+    return_name: Northwind Tax & Advisory, PC
+    return_address: '100 Example Avenue, Suite 200
+
+      Springfield, ST 00000'
+    to_name: Pat & Jordan Sample
+    to_address: '42 Placeholder Lane
+
+      Springfield, ST 00000'

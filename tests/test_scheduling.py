@@ -14,7 +14,10 @@ def _printer(client):
 def test_ready_orders_by_priority(client):
     jobs = client.app.state.ctx.jobs
     pid = _printer(client)
-    common = dict(global_max=1000, per_printer_max=1000)
+    # Schedule far in the future so the background worker doesn't claim them before we read
+    # ready() — then query with an even-later "now" to include both, ordered by priority.
+    far = "2999-01-01T00:00:00.000Z"
+    common = dict(global_max=1000, per_printer_max=1000, scheduled_at=far)
     lo = jobs.enqueue(printer_id=pid, payload={"raw": "QUFB", "copies": 1}, priority=0, **common)
     hi = jobs.enqueue(printer_id=pid, payload={"raw": "QUFB", "copies": 1}, priority=50, **common)
     ready = jobs.ready("9999-01-01T00:00:00.000Z")
