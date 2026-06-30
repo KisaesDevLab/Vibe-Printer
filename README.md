@@ -172,6 +172,26 @@ cd deploy
 
 The app takes a DB backup before applying any migration, and migrations are forward-only.
 
+### Native install (no Docker, e.g. Raspberry Pi)
+
+Docker is the primary/tested path, but the app runs natively too. From a clone on Raspberry Pi OS /
+Debian (arm64 or amd64):
+
+```bash
+bash deploy/install-native.sh        # one-time setup; prints the URL + generated secret
+bash deploy/update-native.sh         # later: pull, rebuild, restart (operator-run)
+```
+
+`install-native.sh` installs the system libs (WeasyPrint, libusb, CUPS, build deps), provisions a
+**Python 3.12 venv via [uv](https://docs.astral.sh/uv/)**, builds the admin UI into `app/static`,
+generates a secret in `/etc/vibe-print.env`, and installs+starts a `vibe-print` **systemd** service.
+Differences from Docker:
+
+- **Office printers use the host's system CUPS** (`http://localhost:631` / `lpadmin`) instead of an
+  in-container cupsd — register those queues in Vibe Print as type `cups`.
+- **SQLCipher-at-rest** isn't installed on arm64 (no wheel); use disk/volume encryption instead.
+- Manage it with `systemctl {status,restart} vibe-print` and `journalctl -u vibe-print -f`.
+
 ---
 
 ## Printer setup
