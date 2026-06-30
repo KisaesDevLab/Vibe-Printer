@@ -3,7 +3,13 @@
 # refreshes deps + the admin UI, and restarts the service. No auto-update timers.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Locate the install: use this checkout if run from one, else the default one-liner location.
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd || true)"
+if [ -n "${SRC_DIR:-}" ] && [ -f "$SRC_DIR/app/main.py" ]; then
+  REPO_ROOT="$SRC_DIR"
+else
+  REPO_ROOT="${INSTALL_DIR:-$HOME/vibe-print}"
+fi
 cd "$REPO_ROOT"
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 

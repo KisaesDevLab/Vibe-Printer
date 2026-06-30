@@ -174,18 +174,23 @@ The app takes a DB backup before applying any migration, and migrations are forw
 
 ### Native install (no Docker, e.g. Raspberry Pi)
 
-Docker is the primary/tested path, but the app runs natively too. From a clone on Raspberry Pi OS /
-Debian (arm64 or amd64):
+Docker is the primary/tested path, but the app runs natively too — and the easiest way needs **no
+downloading and no git**. On the Pi, open **Terminal** and paste this **one line** (don't add `sudo`):
 
 ```bash
-bash deploy/install-native.sh        # one-time setup; prints the URL + generated secret
-bash deploy/update-native.sh         # later: pull, rebuild, restart (operator-run)
+bash <(curl -fsSL https://raw.githubusercontent.com/KisaesDevLab/Vibe-Printer/main/deploy/install-native.sh)
 ```
 
-`install-native.sh` installs the system libs (WeasyPrint, libusb, CUPS, build deps), provisions a
-**Python 3.12 venv via [uv](https://docs.astral.sh/uv/)**, builds the admin UI into `app/static`,
-generates a secret in `/etc/vibe-print.env`, and installs+starts a `vibe-print` **systemd** service.
-Differences from Docker:
+It downloads itself, installs everything, and prints the **URL + secret** at the end. It'll ask for
+your password when it needs admin rights. To update later, paste:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/KisaesDevLab/Vibe-Printer/main/deploy/update-native.sh)
+```
+
+The installer adds the system libs (WeasyPrint, libusb, CUPS, build deps), provisions a **Python 3.12
+venv via [uv](https://docs.astral.sh/uv/)**, builds the admin UI into `app/static`, generates a secret
+in `/etc/vibe-print.env`, and installs+starts a `vibe-print` **systemd** service. Differences from Docker:
 
 - **Office printers use the host's system CUPS** (`http://localhost:631` / `lpadmin`) instead of an
   in-container cupsd — register those queues in Vibe Print as type `cups`.

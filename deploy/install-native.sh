@@ -1,17 +1,38 @@
 #!/usr/bin/env bash
 # Native (no Docker) install for Raspberry Pi OS / Debian (arm64 or amd64).
-# Run from a cloned repo as a normal user with sudo:  bash deploy/install-native.sh
+#
+# EASIEST — run this ONE line in the Pi's Terminal (do NOT add 'sudo' in front):
+#   bash <(curl -fsSL https://raw.githubusercontent.com/KisaesDevLab/Vibe-Printer/main/deploy/install-native.sh)
+# It will ask for your password when it needs admin rights.
 #
 # Sets up: system libs (WeasyPrint/CUPS/USB), Python 3.12 venv (via uv), the built admin UI,
 # a systemd service, and a generated secret. Uses the host's system CUPS for office printers.
 # Docker remains the primary/tested path; this is the native alternative.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-RUN_USER="$(id -un)"
+REPO_URL="${REPO_URL:-https://github.com/KisaesDevLab/Vibe-Printer.git}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/vibe-print}"
+RUN_USER="${SUDO_USER:-$(id -un)}"
 DATA_DIR="${VIBE_PRINT_DATA_DIR:-/var/lib/vibe-print}"
 ENV_FILE="/etc/vibe-print.env"
 PORT="${PORT:-8080}"
+
+# Locate the code. If this script lives inside a checkout, use it; otherwise (the curl one-liner)
+# clone the repo automatically so the user doesn't have to download anything first.
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd || true)"
+if [ -n "${SRC_DIR:-}" ] && [ -f "$SRC_DIR/app/main.py" ]; then
+  REPO_ROOT="$SRC_DIR"
+else
+  echo "==> [0/7] Fetching Vibe Print into $INSTALL_DIR"
+  sudo apt-get update -qq
+  sudo apt-get install -y --no-install-recommends git ca-certificates
+  if [ -d "$INSTALL_DIR/.git" ]; then
+    git -C "$INSTALL_DIR" pull --ff-only
+  else
+    git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
+  fi
+  REPO_ROOT="$INSTALL_DIR"
+fi
 cd "$REPO_ROOT"
 echo "Installing Vibe Print (native) from $REPO_ROOT as user '$RUN_USER' on port $PORT"
 
@@ -88,7 +109,7 @@ echo "✅ Vibe Print is running (native)."
 echo "   URL:    http://$(hostname -I | awk '{print $1}'):$PORT   (admin UI at /admin)"
 echo "   Secret: $(sudo grep -oE 'VIBE_PRINT_SECRET=.*' "$ENV_FILE" | cut -d= -f2-)"
 echo "   Logs:   journalctl -u vibe-print -f"
-echo "   Update: bash deploy/update-native.sh"
+echo "   Update: bash $REPO_ROOT/deploy/update-native.sh"
 echo
 echo "Office printers use the Pi's system CUPS — add queues with the CUPS web UI"
 echo "(http://localhost:631) or 'lpadmin', then register them as type 'cups' in Vibe Print."
