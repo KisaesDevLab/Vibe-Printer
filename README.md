@@ -93,7 +93,7 @@ configures everything. It ships as a self-hosted Docker appliance for a Raspberr
 
 ## Quick start (local, no hardware)
 
-Requires Python 3.12 and Node 20.
+Requires Python 3.12 and Node 24.
 
 ```bash
 git clone https://github.com/KisaesDevLab/Vibe-Printer.git

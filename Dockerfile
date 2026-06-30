@@ -2,7 +2,7 @@
 # Multi-arch (arm64 Pi / amd64 NucBox). Bundles WeasyPrint native libs + fonts, libusb, CUPS.
 
 # --- Stage 1: build the admin UI ---
-FROM node:20-bookworm-slim AS web
+FROM node:24-bookworm-slim AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json* ./
 RUN npm install

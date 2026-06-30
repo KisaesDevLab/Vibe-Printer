@@ -44,10 +44,10 @@ sudo apt-get install -y --no-install-recommends \
   cups cups-client libcups2 libcups2-dev gcc python3-dev \
   curl ca-certificates git
 
-echo "==> [2/7] Node.js (>=18) for the admin UI build"
+echo "==> [2/7] Node.js (>=20) for the admin UI build"
 NODE_MAJOR="$(node -v 2>/dev/null | sed 's/v\([0-9]*\).*/\1/' || echo 0)"
-if [ "${NODE_MAJOR:-0}" -lt 18 ]; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
+  curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
   sudo apt-get install -y nodejs
 fi
 
