@@ -35,6 +35,7 @@ const EMPTY = {
   columns: 48,
   members: "",
   strategy: "failover",
+  raster: false,
   allow_raw: false,
 };
 
@@ -132,6 +133,7 @@ export function PrintersPage() {
       columns: Number(p.params.columns ?? 48),
       members: Array.isArray(p.params.members) ? (p.params.members as number[]).join(", ") : "",
       strategy: String(p.params.strategy ?? "failover"),
+      raster: Boolean(p.params.raster),
       allow_raw: p.allow_raw,
     });
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
@@ -236,10 +238,9 @@ export function PrintersPage() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
-            <label>Type {editing && <span className="muted">(fixed when editing)</span>}</label>
+            <label>Type {editing && <span className="muted">(changing rebuilds connection settings)</span>}</label>
             <select
               value={form.type}
-              disabled={!!editing}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
             >
               {typeOptions(editing).map((t) => (
@@ -293,6 +294,17 @@ export function PrintersPage() {
                   </p>
                 )}
               </>
+            )}
+            {form.type === "zpl_network" && (
+              <label className="row" style={{ marginTop: 12 }}>
+                <input
+                  type="checkbox"
+                  style={{ width: "auto" }}
+                  checked={form.raster}
+                  onChange={(e) => setForm({ ...form, raster: e.target.checked })}
+                />
+                <span>Raster mode (^GFA bitmap — prints text/QR/images as graphics)</span>
+              </label>
             )}
             {form.type === "pool" && (
               <>
@@ -476,50 +488,36 @@ function DiscoverPanel({ onUse }: { onUse: (c: Candidate) => void }) {
   );
 }
 
-function buildBody(form: typeof EMPTY) {
-  let params: Record<string, unknown> = { type: form.type };
-  if (form.type === "escpos_network") params = { ...params, host: form.host, port: form.port, columns: form.columns };
+// Build the params object for the currently-selected type from the form fields.
+function buildParams(form: typeof EMPTY): Record<string, unknown> {
+  const params: Record<string, unknown> = { type: form.type };
+  if (form.type === "escpos_network") Object.assign(params, { host: form.host, port: form.port, columns: form.columns });
   if (form.type === "escpos_usb")
-    params = { ...params, vendor_id: parseInt(form.vendor_id, 16), product_id: parseInt(form.product_id, 16) };
+    Object.assign(params, { vendor_id: parseInt(form.vendor_id, 16), product_id: parseInt(form.product_id, 16) });
   if (form.type === "cups")
-    params = { ...params, queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}) };
-  if (form.type === "ipp_network" || form.type === "zpl_network" || form.type === "star_network")
-    params = { ...params, host: form.host, port: form.port };
-  if (form.type === "pool") params = { ...params, members: parseMembers(form.members), strategy: form.strategy };
-  if (form.type === "virtual") params = { ...params, columns: form.columns };
-  return { name: form.name, params, allow_raw: form.allow_raw };
+    Object.assign(params, { queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}) });
+  if (form.type === "ipp_network" || form.type === "star_network")
+    Object.assign(params, { host: form.host, port: form.port });
+  if (form.type === "zpl_network")
+    Object.assign(params, { host: form.host, port: form.port, raster: form.raster });
+  if (form.type === "pool") Object.assign(params, { members: parseMembers(form.members), strategy: form.strategy });
+  if (form.type === "virtual") Object.assign(params, { columns: form.columns });
+  return params;
+}
+
+function buildBody(form: typeof EMPTY) {
+  return { name: form.name, params: buildParams(form), allow_raw: form.allow_raw };
 }
 
 function parseMembers(s: string): number[] {
   return s.split(",").map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
 }
 
-// Edit preserves the original params (members/strategy/encoding/etc) and overrides only the
-// fields the form exposes — then carries defaults + the version for optimistic concurrency.
+// On edit: if the type is unchanged, preserve the original params (timeout/encoding/dpmm/etc) and
+// override the form-exposed fields; if the type changed, build fresh params for the new type.
 function buildEditBody(form: typeof EMPTY, original: Printer) {
-  const params: Record<string, unknown> = { ...original.params, type: original.type };
-  if (form.type === "escpos_network") {
-    params.host = form.host;
-    params.port = form.port;
-    params.columns = form.columns;
-  }
-  if (form.type === "escpos_usb") {
-    params.vendor_id = parseInt(form.vendor_id, 16);
-    params.product_id = parseInt(form.product_id, 16);
-  }
-  if (form.type === "cups") {
-    params.queue = form.queue;
-    if (form.device_uri) params.device_uri = form.device_uri;
-  }
-  if (form.type === "ipp_network" || form.type === "zpl_network" || form.type === "star_network") {
-    params.host = form.host;
-    params.port = form.port;
-  }
-  if (form.type === "pool") {
-    params.members = parseMembers(form.members);
-    params.strategy = form.strategy;
-  }
-  if (form.type === "virtual") params.columns = form.columns;
+  const fresh = buildParams(form);
+  const params = form.type === original.type ? { ...original.params, ...fresh } : fresh;
   return {
     name: form.name,
     params,

@@ -194,6 +194,8 @@ in `/etc/vibe-print.env`, and installs+starts a `vibe-print` **systemd** service
 
 - **Office printers use the host's system CUPS** (`http://localhost:631` / `lpadmin`) instead of an
   in-container cupsd — register those queues in Vibe Print as type `cups`.
+- **The UI-managed Cloudflare tunnel works natively** — the installer drops `cloudflared` into
+  `/usr/local/bin`, so quick/named tunnels start from the Remote Access tab just like in Docker.
 - **SQLCipher-at-rest** isn't installed on arm64 (no wheel); use disk/volume encryption instead.
 - Manage it with `systemctl {status,restart} vibe-print` and `journalctl -u vibe-print -f`.
 
@@ -298,6 +300,12 @@ curl -s localhost:8080/v1/admin/printers -H "Authorization: Bearer $SECRET" -d '
 ```
 
 `dpmm` = dots per mm (8 ≈ 203 dpi, 12 ≈ 300 dpi). QR/CODE128 render natively (`^BQN` / `^BC`).
+
+**Raster mode** (`"raster": true`, or the toggle in the Printers tab) renders the whole label to a
+1-bit bitmap sent as a ZPL `^GFA` graphic field — so text, QR, images, rules and tables print as
+graphics regardless of the printer's resident fonts. Set `label_width_dots` (and optionally
+`label_height_dots`, the max canvas, auto-cropped to content). Linear barcodes use native ZPL, so
+turn raster off for those.
 
 ### Star printers
 

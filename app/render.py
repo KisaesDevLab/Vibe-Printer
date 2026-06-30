@@ -210,6 +210,102 @@ def render_zpl(elements: list[dict[str, Any]], params: dict[str, Any], caps: Cap
     return ("\n".join(out) + "\n").encode("utf-8", "replace")
 
 
+def _ttf(size: int, *, mono: bool = False) -> Any:
+    name = "DejaVuSansMono.ttf" if mono else "DejaVuSans.ttf"
+    try:
+        return ImageFont.truetype(name, size)
+    except OSError:
+        return ImageFont.load_default()
+
+
+def _qr_image(value: str, box: int) -> Image.Image:
+    import qrcode
+
+    qr = qrcode.QRCode(box_size=max(2, int(box)), border=2)
+    qr.add_data(value)
+    qr.make(fit=True)
+    return qr.make_image(fill_color="black", back_color="white").convert("1")
+
+
+def _zpl_gfa(img: Image.Image) -> str:
+    """Pack a 1-bit PIL image into a ZPL ``^GFA`` graphic field (ASCII-hex, uncompressed).
+    In PIL mode "1", a pixel value of 0 is black; ZPL wants a 1-bit set for black dots."""
+    img = img.convert("1")
+    w, h = img.size
+    bytes_per_row = (w + 7) // 8
+    px = img.load()
+    assert px is not None
+    data = bytearray()
+    for y in range(h):
+        for bx in range(bytes_per_row):
+            b = 0
+            for bit in range(8):
+                x = bx * 8 + bit
+                if x < w and px[x, y] == 0:
+                    b |= 0x80 >> bit
+            data.append(b)
+    total = len(data)
+    return f"^FO0,0^GFA,{total},{total},{bytes_per_row},{data.hex().upper()}^FS"
+
+
+def render_zpl_raster(
+    elements: list[dict[str, Any]], params: dict[str, Any], caps: Capabilities,
+    assets_dir: Path,
+) -> bytes:
+    """Render an element list to a single monochrome bitmap sent as ZPL ``^GFA`` — so text, QR,
+    images, rules and tables print as graphics on any Zebra printer regardless of resident fonts."""
+    width = int(params.get("label_width_dots", 812))
+    max_h = int(params.get("label_height_dots", 1218))
+    columns = int(params.get("columns", 48))
+    margin = 12
+
+    canvas = Image.new("1", (width, max_h), 1)  # white background
+    draw = ImageDraw.Draw(canvas)
+    y = margin
+    for el in elements:
+        t = el.get("type")
+        if t == "text":
+            size = el.get("size", [1, 1])
+            scale = int(size[1]) if isinstance(size, list) and len(size) > 1 else 1
+            fsize = 22 * max(1, scale)
+            draw.text((margin, y), str(el.get("value", "")), fill=0, font=_ttf(fsize))
+            y += fsize + 8
+        elif t == "rule":
+            draw.line([(margin, y), (width - margin, y)], fill=0, width=2)
+            y += 14
+        elif t == "table":
+            for line in _table_lines(el, columns):
+                draw.text((margin, y), line, fill=0, font=_ttf(20, mono=True))
+                y += 24
+        elif t == "qr":
+            if not caps.qr:
+                raise ApiError("unsupported_for_printer", "printer has no QR support")
+            qimg = _qr_image(str(el.get("value", "")), int(el.get("size", 6)))
+            canvas.paste(qimg, (margin, min(y, max_h - qimg.height)))
+            y += qimg.height + 8
+        elif t == "image":
+            asset = el.get("asset")
+            if asset:
+                im = _load_asset_image(str(asset), assets_dir, width - 2 * margin)
+                canvas.paste(im, (margin, min(y, max_h - im.height)))
+                y += im.height + 8
+        elif t == "barcode":
+            raise ApiError(
+                "unsupported_for_printer",
+                "linear barcodes need native ZPL — turn raster off for this printer",
+            )
+        elif t == "feed":
+            y += 24 * int(el.get("lines", 1))
+        elif t in ("cut", "pulse"):
+            pass  # labels auto-separate; no drawer on Zebra
+        else:
+            raise ApiError("validation_error", f"unknown element type: {t}")
+
+    used = min(max_h, y + margin)
+    label = canvas.crop((0, 0, width, used))
+    return ("^XA\n" + _zpl_gfa(label) + "\n^XZ\n").encode("ascii")
+
+
 def render_star(
     elements: list[dict[str, Any]], params: dict[str, Any], caps: Capabilities
 ) -> bytes:

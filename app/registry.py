@@ -131,6 +131,11 @@ class Registry:
     def delete_printer(self, printer_id: int) -> None:
         self.get_printer(printer_id)  # 404 if missing
         self.db.execute("DELETE FROM printers WHERE id=?", (printer_id,))
+        # When the last printer is removed, reset the AUTOINCREMENT counter so numbering
+        # restarts at 1 (the table uses AUTOINCREMENT, which otherwise keeps climbing).
+        remaining = self.db.query_one("SELECT COUNT(*) AS n FROM printers")
+        if remaining is not None and remaining["n"] == 0:
+            self.db.execute("DELETE FROM sqlite_sequence WHERE name='printers'")
         self._invalidate()
 
     def update_printer_params(self, printer_id: int, patch: dict[str, Any]) -> None:

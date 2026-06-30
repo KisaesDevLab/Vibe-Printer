@@ -64,5 +64,5 @@ def build_context(settings: Settings) -> Context:
         locks=PrinterLocks(),
         jobs=JobStore(db),
         rate_limiter=RateLimiter(settings.rate_limit_per_minute),
-        tunnel=TunnelManager(),
+        tunnel=TunnelManager(binary=settings.cloudflared_bin),
     )

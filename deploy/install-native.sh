@@ -51,6 +51,19 @@ if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
   sudo apt-get install -y nodejs
 fi
 
+echo "==> [2b/7] cloudflared (for the UI-managed Cloudflare tunnel)"
+if ! command -v cloudflared >/dev/null 2>&1; then
+  case "$(uname -m)" in
+    aarch64|arm64) CF_ARCH=arm64 ;;
+    x86_64|amd64)  CF_ARCH=amd64 ;;
+    armv7l|armhf)  CF_ARCH=arm ;;
+    *)             CF_ARCH=amd64 ;;
+  esac
+  sudo curl -fsSL -o /usr/local/bin/cloudflared \
+    "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$CF_ARCH"
+  sudo chmod +x /usr/local/bin/cloudflared
+fi
+
 echo "==> [3/7] uv + Python 3.12 venv"
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh

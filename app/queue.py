@@ -502,9 +502,16 @@ class Worker:
             elements = merge_format(fmt["elements"], data)
 
         if printer.type == "zpl_network":
-            from .render import render_zpl
+            if printer.params.get("raster"):
+                from .render import render_zpl_raster
 
-            zpl = render_zpl(elements, printer.params, caps)
+                zpl = render_zpl_raster(
+                    elements, printer.params, caps, self.ctx.settings.assets_dir
+                )
+            else:
+                from .render import render_zpl
+
+                zpl = render_zpl(elements, printer.params, caps)
             return PrintPayload(kind="zpl", data=zpl * copies)
         if printer.type == "star_network":
             from .render import render_star

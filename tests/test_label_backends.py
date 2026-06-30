@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import socket
 import threading
+from pathlib import Path
 
 from conftest import wait_for_job
 
 from app.models import Capabilities
-from app.render import render_star, render_zpl
+from app.render import render_star, render_zpl, render_zpl_raster
 
 DOC = [
     {"type": "text", "value": "Acme", "align": "center", "bold": True},
@@ -24,6 +25,27 @@ def test_render_zpl_structure():
     text = out.decode()
     assert text.startswith("^XA") and text.rstrip().endswith("^XZ")
     assert "Acme" in text and "^BCN" in text
+
+
+def test_render_zpl_raster_emits_gfa():
+    caps = Capabilities(qr=True, raster=True)
+    els = DOC + [{"type": "qr", "value": "https://example.com"}]
+    params = {"label_width_dots": 400, "label_height_dots": 600}
+    out = render_zpl_raster(els, params, caps, Path("."))
+    text = out.decode("ascii")
+    assert text.startswith("^XA") and text.rstrip().endswith("^XZ")
+    assert "^GFA," in text  # raster graphic field instead of native font/QR commands
+
+
+def test_zpl_raster_printer_streams_gfa(client):
+    port, box, th = _capture_server()
+    params = {"type": "zpl_network", "host": "127.0.0.1", "port": port, "raster": True}
+    pid = client.post("/v1/admin/printers", json={"name": "zebra-r", "params": params}).json()["id"]
+    r = client.post("/v1/print", json={"printer": pid, "document": {"elements": DOC}})
+    job = wait_for_job(client, r.json()["job_id"])
+    assert job["status"] == "done"
+    th.join(timeout=3)
+    assert b"^GFA," in box["data"]
 
 
 def test_render_star_structure():

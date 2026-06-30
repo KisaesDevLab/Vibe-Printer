@@ -1166,6 +1166,11 @@
             "title": "Host",
             "type": "string"
           },
+          "label_height_dots": {
+            "default": 1218,
+            "title": "Label Height Dots",
+            "type": "integer"
+          },
           "label_width_dots": {
             "default": 812,
             "title": "Label Width Dots",
@@ -1175,6 +1180,11 @@
             "default": 9100,
             "title": "Port",
             "type": "integer"
+          },
+          "raster": {
+            "default": false,
+            "title": "Raster",
+            "type": "boolean"
           },
           "timeout": {
             "default": 10.0,

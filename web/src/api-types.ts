@@ -1462,6 +1462,11 @@ export interface components {
             /** Host */
             host: string;
             /**
+             * Label Height Dots
+             * @default 1218
+             */
+            label_height_dots: number;
+            /**
              * Label Width Dots
              * @default 812
              */
@@ -1471,6 +1476,11 @@ export interface components {
              * @default 9100
              */
             port: number;
+            /**
+             * Raster
+             * @default false
+             */
+            raster: boolean;
             /**
              * Timeout
              * @default 10

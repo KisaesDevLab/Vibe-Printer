@@ -252,7 +252,7 @@ async def discover(body: dict[str, Any] = Body(default={})) -> dict[str, Any]:
     subnet = body.get("subnet")
     if not subnet:
         raise ApiError("validation_error", "provide a subnet, e.g. 192.168.1.0/24")
-    timeout = float(body.get("timeout", 0.5))
+    timeout = float(body.get("timeout", 1.0))
     candidates = await scan(subnet, timeout=timeout)
     return {"candidates": candidates}
 

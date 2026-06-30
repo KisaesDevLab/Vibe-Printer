@@ -31,6 +31,31 @@ def test_printer_crud(client):
     assert client.get(f"/v1/admin/printers/{pid}").status_code == 404
 
 
+def test_printer_type_change_on_update(client):
+    pid = _make_virtual(client, "T").json()["id"]
+    r = client.put(
+        f"/v1/admin/printers/{pid}",
+        json={
+            "name": "T",
+            "params": {"type": "zpl_network", "host": "127.0.0.1", "raster": True},
+            "version": 1,
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["type"] == "zpl_network"
+    assert r.json()["params"]["raster"] is True
+
+
+def test_printer_id_resets_when_emptied(client):
+    a = _make_virtual(client, "A").json()["id"]
+    b = _make_virtual(client, "B").json()["id"]
+    assert b > a
+    client.delete(f"/v1/admin/printers/{a}")
+    client.delete(f"/v1/admin/printers/{b}")
+    # With the table empty, numbering restarts at 1.
+    assert _make_virtual(client, "C").json()["id"] == 1
+
+
 def test_optimistic_concurrency_conflict(client):
     pid = _make_virtual(client).json()["id"]
     # stale version -> 409

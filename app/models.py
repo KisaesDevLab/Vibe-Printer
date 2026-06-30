@@ -71,6 +71,8 @@ class ZplNetworkParams(BaseModel):
     port: int = 9100
     dpmm: int = 8  # dots per mm (203dpi=8, 300dpi=12)
     label_width_dots: int = 812
+    label_height_dots: int = 1218  # max raster canvas height (cropped to content)
+    raster: bool = False  # render the whole label to a ^GFA bitmap (graphics/QR/images/fonts)
     timeout: float = 10.0
 
 

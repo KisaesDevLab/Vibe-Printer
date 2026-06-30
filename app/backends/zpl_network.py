@@ -19,8 +19,9 @@ class ZplNetworkBackend:
         self.params = params
 
     def capabilities(self) -> Capabilities:
+        raster = bool(self.params.get("raster", False))
         return Capabilities(
-            cut=False, qr=True, barcode=["CODE128", "CODE39", "EAN13"], raster=False,
+            cut=False, qr=True, barcode=["CODE128", "CODE39", "EAN13"], raster=raster,
             pulse=False, pdf=False, columns=self.params.get("columns", 64),
             paper_width_dots=self.params.get("label_width_dots", 812),
         )

@@ -12,8 +12,10 @@ import ipaddress
 
 from .errors import ApiError
 
-MAX_HOSTS = 256
-DEFAULT_PORTS = {9100: "escpos_network", 631: "cups"}
+MAX_HOSTS = 1024  # up to a /22 flat network
+# Probe the common print ports. 631 maps to direct IPP (no CUPS queue to provision); 515 is LPD.
+DEFAULT_PORTS = {9100: "escpos_network", 631: "ipp_network", 515: "cups", 9101: "escpos_network",
+                 9102: "escpos_network"}
 
 
 async def _probe(host: str, port: int, timeout: float) -> bool:
@@ -34,8 +36,8 @@ async def scan(
     subnet: str,
     *,
     ports: dict[int, str] | None = None,
-    timeout: float = 0.5,
-    concurrency: int = 64,
+    timeout: float = 1.0,
+    concurrency: int = 256,
 ) -> list[dict]:
     ports = ports or DEFAULT_PORTS
     try:

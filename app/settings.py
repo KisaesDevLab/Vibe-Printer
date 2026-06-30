@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     access_team_domain: str = ""  # e.g. myteam.cloudflareaccess.com — enables JWT enforcement
     access_aud: str = ""  # Application Audience (AUD) tag
     cloudflared_metrics_url: str = "http://127.0.0.1:2000"  # managed tunnel /ready health
+    cloudflared_bin: str = "cloudflared"  # binary path (native installs put it on PATH)
     remote_access_mode: str = "lan"  # lan | cloudflare | tailscale (display)
     remote_hostname: str = ""  # display-only public hostname (Decision 12)
     # Enforce Cloudflare Access only on tunnelled requests so direct-LAN access keeps working
