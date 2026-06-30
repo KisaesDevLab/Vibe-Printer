@@ -38,6 +38,14 @@ def _enforce_quota(ctx: Context, printer_id: int) -> None:
         )
 
 
+def _accepts_rendered_pdf(ctx: Context, printer: Any) -> bool:
+    """True if a WeasyPrint-rendered PDF (template/overlay) can target this printer: PDF-capable
+    printers (CUPS/IPP/virtual), or a raster-enabled ZPL printer (PDF→^GFA bitmap)."""
+    if printer.type == "zpl_network" and printer.params.get("raster"):
+        return True
+    return "pdf" in ctx.backend_capabilities(printer).document_formats
+
+
 def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
     printer = ctx.registry.get_printer(req.printer)
     payload: dict[str, Any] = {"data": req.data, "copies": req.copies}
@@ -45,10 +53,10 @@ def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
     template_id = req.template
     resolved_version = None
 
-    # Overlay → stamped PDF; works on any PDF-capable printer (CUPS/virtual).
+    # Overlay → stamped PDF; works on any PDF-capable printer (CUPS/virtual) or a raster ZPL
+    # printer (the rendered PDF is rasterized to a ^GFA bitmap).
     if req.overlay:
-        caps = ctx.backend_capabilities(printer)
-        if "pdf" not in caps.document_formats:
+        if not _accepts_rendered_pdf(ctx, printer):
             raise ApiError("unsupported_for_printer", "printer does not accept PDF (overlay)")
         ov = ctx.registry.get_overlay(req.overlay)
         payload["overlay"] = req.overlay
@@ -60,10 +68,9 @@ def _resolve_targets(ctx: Context, req: PrintRequest) -> dict[str, Any]:
             "resolved_version": ov["version"],
         }
 
-    # Explicit template → PDF on any PDF-capable printer (incl. virtual, for paper-free tests).
+    # Explicit template → PDF on any PDF-capable printer (incl. virtual; and raster ZPL via ^GFA).
     if req.template:
-        caps = ctx.backend_capabilities(printer)
-        if "pdf" not in caps.document_formats:
+        if not _accepts_rendered_pdf(ctx, printer):
             raise ApiError("unsupported_for_printer", "printer does not accept PDF templates")
         tpl = ctx.registry.get_template(req.template)
         payload["template"] = req.template

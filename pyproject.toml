@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Native-lib backends — installed in the appliance image, optional for local dev/test.
-pdf = ["weasyprint>=61"]
+pdf = ["weasyprint>=61", "pypdfium2>=4.25"]  # pypdfium2 rasterizes PDF pages (e.g. PDF→ZPL raster)
 cups = ["pycups>=2.0"]
 usb = ["pyusb>=1.2"]
 access = ["pyjwt[crypto]>=2.8"]

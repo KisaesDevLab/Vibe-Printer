@@ -248,6 +248,30 @@ def _zpl_gfa(img: Image.Image) -> str:
     return f"^FO0,0^GFA,{total},{total},{bytes_per_row},{data.hex().upper()}^FS"
 
 
+def pdf_to_zpl_raster(pdf: bytes, params: dict[str, Any]) -> bytes:
+    """Rasterize each PDF page to a 1-bit bitmap and emit one ZPL ``^GFA`` label per page — so an
+    HTML/CSS PDF template (or overlay) can print on a Zebra in raster mode."""
+    try:
+        import pypdfium2 as pdfium
+    except Exception as e:  # pragma: no cover
+        raise ApiError(
+            "render_error", "PDF→raster unavailable: install the 'pdf' extra (pypdfium2)."
+        ) from e
+
+    width = int(params.get("label_width_dots", 812))
+    doc = pdfium.PdfDocument(pdf)
+    try:
+        labels: list[str] = []
+        for page in doc:
+            w_pt = page.get_size()[0] or 1.0
+            bitmap = page.render(scale=width / w_pt)
+            img = bitmap.to_pil().convert("L").convert("1")  # grayscale → 1-bit dither
+            labels.append("^XA\n" + _zpl_gfa(img) + "\n^XZ")
+    finally:
+        doc.close()
+    return ("\n".join(labels) + "\n").encode("ascii")
+
+
 def render_zpl_raster(
     elements: list[dict[str, Any]], params: dict[str, Any], caps: Capabilities,
     assets_dir: Path,

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import socket
 import threading
+from io import BytesIO
 from pathlib import Path
 
+import pytest
 from conftest import wait_for_job
 
 from app.models import Capabilities
@@ -46,6 +48,22 @@ def test_zpl_raster_printer_streams_gfa(client):
     assert job["status"] == "done"
     th.join(timeout=3)
     assert b"^GFA," in box["data"]
+
+
+def test_pdf_to_zpl_raster():
+    pytest.importorskip("pypdfium2")  # requires the 'pdf' extra
+    from reportlab.pdfgen import canvas
+
+    from app.render import pdf_to_zpl_raster
+
+    buf = BytesIO()
+    c = canvas.Canvas(buf, pagesize=(200, 100))
+    c.drawString(10, 50, "LABEL")
+    c.showPage()
+    c.save()
+    out = pdf_to_zpl_raster(buf.getvalue(), {"label_width_dots": 200})
+    text = out.decode("ascii")
+    assert text.startswith("^XA") and "^GFA," in text and text.rstrip().endswith("^XZ")
 
 
 def test_render_star_structure():

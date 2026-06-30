@@ -444,6 +444,14 @@ class Worker:
         )
 
     # ---------------------------------------------------------------- rendering
+    def _pdf_payload(self, printer: Any, pdf: bytes, copies: int) -> PrintPayload:
+        """Wrap rendered PDF bytes: rasterize to ^GFA for a raster ZPL printer, else send as PDF."""
+        if printer.type == "zpl_network" and printer.params.get("raster"):
+            from .render import pdf_to_zpl_raster
+
+            return PrintPayload(kind="zpl", data=pdf_to_zpl_raster(pdf, printer.params) * copies)
+        return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
+
     def _render(self, job: dict[str, Any], printer: Any) -> PrintPayload:
         payload = json.loads(job["payload_json"])
         copies = int(payload.get("copies", 1))
@@ -482,15 +490,15 @@ class Worker:
             pdf = render_overlay(
                 base_path.read_bytes(), ov["fields"], data, self.ctx.settings.assets_dir
             )
-            return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
+            return self._pdf_payload(printer, pdf, copies)
 
-        # PDF template — any PDF-capable printer (CUPS/IPP, and virtual for paper-free tests).
+        # PDF template — any PDF-capable printer (CUPS/IPP, virtual, or raster ZPL via ^GFA).
         if payload.get("template"):
             tpl = self.ctx.registry.get_template(int(payload["template"]))
             pdf = render_pdf(
                 tpl["html"], tpl["css"], tpl["page_setup"], data, self.ctx.settings.assets_dir
             )
-            return PrintPayload(kind="pdf", data=pdf, options={"copies": copies})
+            return self._pdf_payload(printer, pdf, copies)
 
         caps = self.ctx.backend_capabilities(printer)
 

@@ -307,6 +307,11 @@ graphics regardless of the printer's resident fonts. Set `label_width_dots` (and
 `label_height_dots`, the max canvas, auto-cropped to content). Linear barcodes use native ZPL, so
 turn raster off for those.
 
+A **raster ZPL printer also accepts PDF templates and overlays**: the HTML/CSS template is rendered
+to PDF (WeasyPrint), each page is rasterized (pypdfium2) to the label width, and sent as `^GFA`. So
+you can design a label as a PDF template and print it on a Zebra. (Without raster mode, ZPL printers
+reject templates with `unsupported_for_printer`.)
+
 ### Star printers
 
 Star printers (Star Line Mode) over TCP :9100. Text/alignment/cut are modeled.
