@@ -56,6 +56,7 @@ export function PrintersPage() {
   const [editing, setEditing] = useState<Printer | null>(null);
   const [confirm, setConfirm] = useState<Printer | null>(null);
   const [toast, setToast] = useState("");
+  const [detected, setDetected] = useState<Trays | null>(null);
 
   const create = useMutation({
     mutationFn: () => api.post("/v1/admin/printers", buildBody(form)),
@@ -100,6 +101,18 @@ export function PrintersPage() {
     onError: (e: Error) => setToast(`Test failed: ${e.message}`),
   });
 
+  const detectTrays = useMutation({
+    mutationFn: () => api.get<Trays>(`/v1/admin/printers/${editing!.id}/trays`),
+    onSuccess: (d) => {
+      setDetected(d);
+      const ob = d.output_bins?.length ? d.output_bins.join(", ") : "none reported";
+      const it = d.input_trays?.length ? d.input_trays.join(", ") : "none reported";
+      setToast(`Detected — output bins: ${ob}; input trays: ${it}`);
+      setTimeout(() => setToast(""), 9000);
+    },
+    onError: (e: Error) => setToast(`Detect trays failed: ${e.message}`),
+  });
+
   const drawer = useMutation({
     mutationFn: (id: number) => api.post(`/v1/admin/printers/${id}/open-drawer`, {}),
     onSuccess: () => {
@@ -126,6 +139,7 @@ export function PrintersPage() {
   function startEdit(p: Printer) {
     setEditing(p);
     setErr("");
+    setDetected(null);
     setForm({
       ...EMPTY,
       name: p.name,
@@ -150,6 +164,7 @@ export function PrintersPage() {
     setEditing(null);
     setForm({ ...EMPTY });
     setErr("");
+    setDetected(null);
   }
 
   return (
@@ -301,7 +316,13 @@ export function PrintersPage() {
                     <p className="muted" style={{ fontSize: 12 }}>
                       Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
                     </p>
-                    <TrayFields form={form} setForm={setForm} />
+                    <TrayFields
+                  form={form}
+                  setForm={setForm}
+                  detected={detected}
+                  detecting={detectTrays.isPending}
+                  onDetect={editing ? () => detectTrays.mutate() : undefined}
+                />
                   </>
                 )}
               </>
@@ -342,7 +363,13 @@ export function PrintersPage() {
                   onChange={(e) => setForm({ ...form, device_uri: e.target.value })}
                   placeholder="ipp://192.168.1.50/ipp/print"
                 />
-                <TrayFields form={form} setForm={setForm} />
+                <TrayFields
+                  form={form}
+                  setForm={setForm}
+                  detected={detected}
+                  detecting={detectTrays.isPending}
+                  onDetect={editing ? () => detectTrays.mutate() : undefined}
+                />
               </>
             )}
             {form.type !== "cups" && (
@@ -401,7 +428,22 @@ function pulseCapable(p: Printer): boolean {
   return ["escpos_network", "escpos_usb", "star_network", "virtual", "pool"].includes(p.type);
 }
 
-function TrayFields({ form, setForm }: { form: typeof EMPTY; setForm: (f: typeof EMPTY) => void }) {
+interface Trays {
+  output_bins: string[];
+  input_trays: string[];
+}
+
+function TrayFields({
+  form, setForm, detected, onDetect, detecting,
+}: {
+  form: typeof EMPTY;
+  setForm: (f: typeof EMPTY) => void;
+  detected?: Trays | null;
+  onDetect?: () => void;
+  detecting?: boolean;
+}) {
+  const outbins = detected?.output_bins?.length ? detected.output_bins : OUTPUT_BINS;
+  const intrays = detected?.input_trays?.length ? detected.input_trays : INPUT_TRAYS;
   return (
     <>
       <label>Output tray <span className="muted">(optional)</span></label>
@@ -418,8 +460,21 @@ function TrayFields({ form, setForm }: { form: typeof EMPTY; setForm: (f: typeof
         placeholder="e.g. auto, tray-2, manual"
         onChange={(e) => setForm({ ...form, input_tray: e.target.value })}
       />
-      <datalist id="vp-output-bins">{OUTPUT_BINS.map((v) => <option key={v} value={v} />)}</datalist>
-      <datalist id="vp-input-trays">{INPUT_TRAYS.map((v) => <option key={v} value={v} />)}</datalist>
+      {onDetect && (
+        <button className="ghost" type="button" onClick={onDetect} disabled={detecting}
+                style={{ marginTop: 8 }}
+                title="Query the printer for its supported trays">
+          {detecting ? "Detecting…" : "Detect trays"}
+        </button>
+      )}
+      {detected && (
+        <p className="muted" style={{ fontSize: 12 }}>
+          Detected output: {detected.output_bins.join(", ") || "none"} · input:{" "}
+          {detected.input_trays.join(", ") || "none"}
+        </p>
+      )}
+      <datalist id="vp-output-bins">{outbins.map((v) => <option key={v} value={v} />)}</datalist>
+      <datalist id="vp-input-trays">{intrays.map((v) => <option key={v} value={v} />)}</datalist>
     </>
   );
 }

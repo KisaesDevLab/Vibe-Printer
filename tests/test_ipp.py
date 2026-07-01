@@ -7,9 +7,13 @@ from conftest import wait_for_job
 from app.backends.base import PrintPayload, SendResult
 from app.backends.ipp_network import IppNetworkBackend
 from app.ipp_client import (
+    _TAG_CHARSET,
+    _TAG_KEYWORD,
     OP_GET_PRINTER_ATTRS,
+    _attr,
     _build,
     _ipp_status,
+    _parse_attributes,
     build_print_job,
     build_uri,
 )
@@ -59,6 +63,42 @@ def test_ipp_backend_passes_trays(monkeypatch):
         PrintPayload(kind="pdf", data=b"%PDF")
     )
     assert seen["output_bin"] == "face-up" and seen["input_tray"] == "tray-3"
+
+
+def test_parse_attributes_multivalue():
+    body = b"\x02\x00\x00\x00" + (1).to_bytes(4, "big") + b"\x01"
+    body += _attr(_TAG_CHARSET, "attributes-charset", "utf-8")
+    body += b"\x04"  # printer-attributes group
+    body += _attr(_TAG_KEYWORD, "output-bin-supported", "face-down")
+    body += _attr(_TAG_KEYWORD, "", "face-up")  # 1setOf additional value
+    body += _attr(_TAG_KEYWORD, "media-source-supported", "tray-1")
+    body += _attr(_TAG_KEYWORD, "", "tray-2")
+    body += b"\x03"  # end-of-attributes
+    attrs = _parse_attributes(body)
+    assert attrs["output-bin-supported"] == ["face-down", "face-up"]
+    assert attrs["media-source-supported"] == ["tray-1", "tray-2"]
+
+
+def test_detect_trays_endpoint_ipp(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.ipp_client.list_trays",
+        lambda uri, timeout=5.0: {"output_bins": ["face-up"], "input_trays": ["tray-2"]},
+    )
+    pid = client.post(
+        "/v1/admin/printers", json={"name": "I", "params": {"type": "ipp_network", "host": "h"}}
+    ).json()["id"]
+    r = client.get(f"/v1/admin/printers/{pid}/trays")
+    assert r.status_code == 200
+    assert r.json() == {"output_bins": ["face-up"], "input_trays": ["tray-2"]}
+
+
+def test_detect_trays_rejects_non_office(client):
+    pid = client.post(
+        "/v1/admin/printers", json={"name": "z", "params": {"type": "zpl_network", "host": "h"}}
+    ).json()["id"]
+    r = client.get(f"/v1/admin/printers/{pid}/trays")
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "unsupported_for_printer"
 
 
 # --- backend (client monkeypatched) ---

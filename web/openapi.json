@@ -2818,6 +2818,48 @@
         "summary": "Test Print"
       }
     },
+    "/v1/admin/printers/{printer_id}/trays": {
+      "get": {
+        "description": "Query a CUPS/IPP printer for its supported output bins and input trays.",
+        "operationId": "detect_trays_v1_admin_printers__printer_id__trays_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "printer_id",
+            "required": true,
+            "schema": {
+              "title": "Printer Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Detect Trays V1 Admin Printers  Printer Id  Trays Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detect Trays"
+      }
+    },
     "/v1/admin/provision": {
       "post": {
         "operationId": "provision_v1_admin_provision_post",

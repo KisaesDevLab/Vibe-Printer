@@ -119,5 +119,22 @@ class CupsBackend:
             time.sleep(0.5)
         return False  # still processing — report as sent, not confirmed
 
+    def list_trays(self) -> dict[str, list[str]]:
+        conn = self._conn()
+        try:
+            attrs = conn.getPrinterAttributes(self.queue)
+        except Exception as e:
+            raise PrinterUnreachable(f"cannot read attributes for {self.queue}: {e}") from e
+
+        def _as_list(v: Any) -> list[str]:
+            if v is None:
+                return []
+            return [str(x) for x in v] if isinstance(v, (list, tuple)) else [str(v)]
+
+        return {
+            "output_bins": _as_list(attrs.get("output-bin-supported")),
+            "input_trays": _as_list(attrs.get("media-source-supported")),
+        }
+
     def close(self) -> None:
         return

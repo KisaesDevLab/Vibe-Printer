@@ -280,7 +280,8 @@ admin is disabled and `:631` is bound to localhost — no remote admin surface.
 (`output_bin`, e.g. `face-down`, `tray-1`, `stacker-1`, `mailbox-1`) and an **input tray**
 (`input_tray`, e.g. `auto`, `tray-2`, `manual`) in the Printers tab (or via params). CUPS sends them
 as `output-bin` / `media-source`; direct IPP sends `output-bin` and `media-col{media-source}`. Use
-the printer's own tray names — the UI offers common values as suggestions.
+the printer's own tray names — or, when editing a printer, click **Detect trays** to query the device
+(`GET /v1/admin/printers/{id}/trays`) and populate the dropdowns with the exact bins/sources it reports.
 
 You can print office output two ways: render an [HTML/CSS template](#pdf-templates-office) with
 `/v1/print`, or send a **finished PDF / PostScript / PCL** with
@@ -462,7 +463,7 @@ operator action (resolve / requeue) in the UI or via the admin API.
 | Area | Endpoints |
 |---|---|
 | Device | `GET/PUT /device` |
-| Printers | `GET/POST /printers`, `GET/PUT/DELETE /printers/{id}`, `POST /printers/{id}/test`, `POST /printers/{id}/open-drawer`, `GET /printers/{id}/status`, `POST /printers/{id}/provision-queue`, `POST /discover` |
+| Printers | `GET/POST /printers`, `GET/PUT/DELETE /printers/{id}`, `POST /printers/{id}/test`, `POST /printers/{id}/open-drawer`, `GET /printers/{id}/status`, `GET /printers/{id}/trays`, `POST /printers/{id}/provision-queue`, `POST /discover` |
 | Formats | `GET/POST /formats`, `GET/PUT/DELETE /formats/{id}`, `POST /formats/{id}/preview` |
 | Templates | `GET/POST /templates`, `GET/PUT/DELETE /templates/{id}`, `POST /templates/{id}/preview` |
 | Overlays | `GET/POST /overlays`, `GET/PUT/DELETE /overlays/{id}`, `POST /overlays/{id}/preview`, `GET /overlays/{id}/base`, `GET /overlays/{id}/pages` |

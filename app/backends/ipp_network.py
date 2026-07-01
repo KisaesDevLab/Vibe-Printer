@@ -63,5 +63,10 @@ class IppNetworkBackend:
             raise BackendError(str(e)) from e
         return SendResult(bytes_sent=sent, completed=False)
 
+    def list_trays(self) -> dict[str, list[str]]:
+        from ..ipp_client import list_trays
+
+        return list_trays(self.uri)
+
     def close(self) -> None:
         return

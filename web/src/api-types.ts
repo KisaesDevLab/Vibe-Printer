@@ -566,6 +566,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/printers/{printer_id}/trays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detect Trays
+         * @description Query a CUPS/IPP printer for its supported output bins and input trays.
+         */
+        get: operations["detect_trays_v1_admin_printers__printer_id__trays_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/provision": {
         parameters: {
             query?: never;
@@ -2803,6 +2823,39 @@ export interface operations {
         };
     };
     test_print_v1_admin_printers__printer_id__test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                printer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detect_trays_v1_admin_printers__printer_id__trays_get: {
         parameters: {
             query?: never;
             header?: never;

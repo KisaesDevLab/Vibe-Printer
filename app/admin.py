@@ -93,6 +93,23 @@ def delete_printer(
     return Response(status_code=204)
 
 
+@router.get("/printers/{printer_id}/trays")
+def detect_trays(printer_id: int, ctx: Context = Depends(get_ctx)) -> dict[str, Any]:
+    """Query a CUPS/IPP printer for its supported output bins and input trays."""
+    from .backends.base import BackendError, PrinterUnreachable
+
+    printer = ctx.registry.get_printer(printer_id)
+    if printer.type not in ("cups", "ipp_network"):
+        raise ApiError("unsupported_for_printer", "tray detection is for cups/ipp printers")
+    backend = make_backend(printer, data_dir=ctx.settings.data_dir)
+    try:
+        return backend.list_trays()  # type: ignore[attr-defined]
+    except (PrinterUnreachable, BackendError) as e:
+        raise ApiError("printer_unreachable", str(e)) from e
+    except Exception as e:  # network/parse errors → treat as unreachable
+        raise ApiError("printer_unreachable", str(e)) from e
+
+
 @router.post("/printers/{printer_id}/provision-queue")
 def provision_queue(
     printer_id: int,

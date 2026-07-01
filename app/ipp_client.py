@@ -119,6 +119,55 @@ def build_print_job(printer_uri: str, pdf: bytes, job_name: str = "vibe-print",
     return _build(OP_PRINT_JOB, printer_uri, extra, job_attrs) + pdf
 
 
+def _parse_attributes(body: bytes) -> dict[str, list[str]]:
+    """Parse an IPP response into {attribute-name: [string values]} (keyword/name/text values).
+    Handles 1setOf: additional values carry a zero-length name and belong to the prior attribute."""
+    attrs: dict[str, list[str]] = {}
+    i = 8  # skip version(2) + status(2) + request-id(4)
+    n = len(body)
+    last: str | None = None
+    while i < n:
+        tag = body[i]
+        i += 1
+        if tag < 0x10:  # delimiter tag (0x03 = end-of-attributes)
+            if tag == 0x03:
+                break
+            last = None
+            continue
+        if i + 2 > n:
+            break
+        name_len = int.from_bytes(body[i:i + 2], "big")
+        i += 2
+        name = body[i:i + name_len].decode("utf-8", "replace")
+        i += name_len
+        val_len = int.from_bytes(body[i:i + 2], "big")
+        i += 2
+        val = body[i:i + val_len]
+        i += val_len
+        key = name if name_len > 0 else last
+        if name_len > 0:
+            last = name
+        if key is None or tag in (0x21, 0x22, 0x23):  # skip integer/boolean/enum values
+            continue
+        attrs.setdefault(key, []).append(val.decode("utf-8", "replace"))
+    return attrs
+
+
+def list_trays(printer_uri: str, timeout: float = 5.0) -> dict[str, list[str]]:
+    """Query the printer for its supported output bins and input trays (media sources)."""
+    body = _build(OP_GET_PRINTER_ATTRS, printer_uri)
+    r = httpx.post(
+        http_url(printer_uri), content=body,
+        headers={"Content-Type": "application/ipp"}, timeout=timeout,
+    )
+    r.raise_for_status()
+    attrs = _parse_attributes(r.content)
+    return {
+        "output_bins": attrs.get("output-bin-supported", []),
+        "input_trays": attrs.get("media-source-supported", []),
+    }
+
+
 def print_pdf(printer_uri: str, pdf: bytes, job_name: str = "vibe-print",
               timeout: float = 30.0, output_bin: str = "", input_tray: str = "") -> int:
     """Submit a PDF via IPP Print-Job. Returns bytes sent; raises on IPP error."""
