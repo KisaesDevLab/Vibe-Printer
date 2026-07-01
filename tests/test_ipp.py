@@ -139,7 +139,8 @@ def test_cups_and_ipp_accept_tray_params(client):
     assert c["params"]["output_bin"] == "stacker-1" and c["params"]["input_tray"] == "tray-2"
     i = client.post(
         "/v1/admin/printers",
-        json={"name": "I2", "params": {"type": "ipp_network", "host": "h", "output_bin": "face-up"}},
+        json={"name": "I2",
+              "params": {"type": "ipp_network", "host": "h", "output_bin": "face-up"}},
     ).json()
     assert i["params"]["output_bin"] == "face-up"
 
