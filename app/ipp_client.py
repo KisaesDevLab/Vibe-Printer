@@ -16,6 +16,14 @@ _TAG_URI = 0x45
 _TAG_KEYWORD = 0x44
 _TAG_NAME = 0x42
 _TAG_MIME = 0x49
+_TAG_BEG_COLLECTION = 0x34
+_TAG_END_COLLECTION = 0x37
+_TAG_MEMBER_NAME = 0x4A
+
+# IPP delimiter tags
+_TAG_OPERATION_ATTRS = 0x01
+_TAG_JOB_ATTRS = 0x02
+_TAG_END_ATTRS = 0x03
 
 OP_PRINT_JOB = 0x0002
 OP_GET_PRINTER_ATTRS = 0x000B
@@ -27,18 +35,46 @@ def _attr(tag: int, name: str, value: str | bytes) -> bytes:
     return bytes([tag]) + len(nb).to_bytes(2, "big") + nb + len(vb).to_bytes(2, "big") + vb
 
 
-def _build(operation: int, printer_uri: str, extra: bytes = b"", request_id: int = 1) -> bytes:
+def _member(tag: int, value: bytes) -> bytes:
+    # A collection member: zero-length name, then the value (name goes in a memberAttrName attr).
+    return bytes([tag]) + (0).to_bytes(2, "big") + len(value).to_bytes(2, "big") + value
+
+
+def _media_col_source(tray: str) -> bytes:
+    """Encode ``media-col = { media-source = <tray> }`` (an IPP collection) for input-tray."""
+    out = bytearray()
+    out += _attr(_TAG_BEG_COLLECTION, "media-col", b"")
+    out += _member(_TAG_MEMBER_NAME, b"media-source")
+    out += _member(_TAG_KEYWORD, tray.encode("utf-8"))
+    out += _attr(_TAG_END_COLLECTION, "", b"")
+    return bytes(out)
+
+
+def _job_attributes(output_bin: str = "", input_tray: str = "") -> bytes:
+    """Job-template attributes (output-bin keyword, media-col input source)."""
+    out = bytearray()
+    if output_bin:
+        out += _attr(_TAG_KEYWORD, "output-bin", output_bin)
+    if input_tray:
+        out += _media_col_source(input_tray)
+    return bytes(out)
+
+
+def _build(operation: int, printer_uri: str, extra: bytes = b"", job_attrs: bytes = b"",
+           request_id: int = 1) -> bytes:
     out = bytearray()
     out += b"\x02\x00"  # IPP version 2.0
     out += operation.to_bytes(2, "big")
     out += request_id.to_bytes(4, "big")
-    out += b"\x01"  # operation-attributes-tag
+    out += bytes([_TAG_OPERATION_ATTRS])
     out += _attr(_TAG_CHARSET, "attributes-charset", "utf-8")
     out += _attr(_TAG_NATURAL_LANG, "attributes-natural-language", "en")
     out += _attr(_TAG_URI, "printer-uri", printer_uri)
     out += _attr(_TAG_NAME, "requesting-user-name", "vibe-print")
     out += extra
-    out += b"\x03"  # end-of-attributes-tag
+    if job_attrs:
+        out += bytes([_TAG_JOB_ATTRS]) + job_attrs
+    out += bytes([_TAG_END_ATTRS])
     return bytes(out)
 
 
@@ -73,13 +109,20 @@ def get_printer_attributes(printer_uri: str, timeout: float = 5.0) -> bool:
     return _ipp_status(r.content) < 0x0100
 
 
-def print_pdf(printer_uri: str, pdf: bytes, job_name: str = "vibe-print",
-              timeout: float = 30.0) -> int:
-    """Submit a PDF via IPP Print-Job. Returns bytes sent; raises on IPP error."""
+def build_print_job(printer_uri: str, pdf: bytes, job_name: str = "vibe-print",
+                    output_bin: str = "", input_tray: str = "") -> bytes:
+    """Assemble the full IPP Print-Job request body (attributes + document)."""
     extra = _attr(_TAG_NAME, "job-name", job_name) + _attr(
         _TAG_MIME, "document-format", "application/pdf"
     )
-    body = _build(OP_PRINT_JOB, printer_uri, extra) + pdf
+    job_attrs = _job_attributes(output_bin, input_tray)
+    return _build(OP_PRINT_JOB, printer_uri, extra, job_attrs) + pdf
+
+
+def print_pdf(printer_uri: str, pdf: bytes, job_name: str = "vibe-print",
+              timeout: float = 30.0, output_bin: str = "", input_tray: str = "") -> int:
+    """Submit a PDF via IPP Print-Job. Returns bytes sent; raises on IPP error."""
+    body = build_print_job(printer_uri, pdf, job_name, output_bin, input_tray)
     r = httpx.post(
         http_url(printer_uri), content=body,
         headers={"Content-Type": "application/ipp"}, timeout=timeout,

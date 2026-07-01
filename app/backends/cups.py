@@ -87,6 +87,10 @@ class CupsBackend:
         copies = int(payload.options.get("copies", 1))
         if copies > 1:
             options["copies"] = str(copies)
+        if self.params.get("output_bin"):
+            options["output-bin"] = str(self.params["output_bin"])
+        if self.params.get("input_tray"):
+            options["media-source"] = str(self.params["input_tray"])
         # PCL is device-native: pass it through CUPS unfiltered. PDF/PostScript are auto-filtered
         # (and converted for IPP-Everywhere printers).
         if payload.kind == "pcl":

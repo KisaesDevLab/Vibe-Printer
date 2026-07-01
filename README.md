@@ -276,6 +276,12 @@ curl -s localhost:8080/v1/admin/printers/$PID/provision-queue -H "Authorization:
 CUPS jobs are submitted concurrently (its own spooler) and polled to true completion. The CUPS web
 admin is disabled and `:631` is bound to localhost — no remote admin surface.
 
+**Output / input trays.** For CUPS and direct-IPP printers you can pick an **output tray**
+(`output_bin`, e.g. `face-down`, `tray-1`, `stacker-1`, `mailbox-1`) and an **input tray**
+(`input_tray`, e.g. `auto`, `tray-2`, `manual`) in the Printers tab (or via params). CUPS sends them
+as `output-bin` / `media-source`; direct IPP sends `output-bin` and `media-col{media-source}`. Use
+the printer's own tray names — the UI offers common values as suggestions.
+
 You can print office output two ways: render an [HTML/CSS template](#pdf-templates-office) with
 `/v1/print`, or send a **finished PDF / PostScript / PCL** with
 [`/v1/print/file`](#post-v1printfile). Example printing an existing PDF:

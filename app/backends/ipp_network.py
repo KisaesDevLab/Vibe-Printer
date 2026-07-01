@@ -48,7 +48,11 @@ class IppNetworkBackend:
         from ..ipp_client import print_pdf
 
         try:
-            sent = print_pdf(self.uri, payload.data)
+            sent = print_pdf(
+                self.uri, payload.data,
+                output_bin=str(self.params.get("output_bin", "")),
+                input_tray=str(self.params.get("input_tray", "")),
+            )
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             raise PrinterUnreachable(f"{self.uri} unreachable: {e}") from e
         except httpx.HTTPError as e:

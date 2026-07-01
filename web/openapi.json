@@ -33,6 +33,11 @@
             ],
             "title": "Device Uri"
           },
+          "input_tray": {
+            "default": "",
+            "title": "Input Tray",
+            "type": "string"
+          },
           "make_model": {
             "default": "everywhere",
             "title": "Make Model",
@@ -48,6 +53,11 @@
               }
             ],
             "title": "Media"
+          },
+          "output_bin": {
+            "default": "",
+            "title": "Output Bin",
+            "type": "string"
           },
           "queue": {
             "title": "Queue",
@@ -367,6 +377,11 @@
             "title": "Host",
             "type": "string"
           },
+          "input_tray": {
+            "default": "",
+            "title": "Input Tray",
+            "type": "string"
+          },
           "media": {
             "anyOf": [
               {
@@ -377,6 +392,11 @@
               }
             ],
             "title": "Media"
+          },
+          "output_bin": {
+            "default": "",
+            "title": "Output Bin",
+            "type": "string"
           },
           "port": {
             "default": 631,

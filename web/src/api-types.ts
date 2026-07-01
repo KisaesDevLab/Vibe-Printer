@@ -933,12 +933,22 @@ export interface components {
             /** Device Uri */
             device_uri?: string | null;
             /**
+             * Input Tray
+             * @default
+             */
+            input_tray: string;
+            /**
              * Make Model
              * @default everywhere
              */
             make_model: string;
             /** Media */
             media?: string | null;
+            /**
+             * Output Bin
+             * @default
+             */
+            output_bin: string;
             /** Queue */
             queue: string;
             /**
@@ -1116,8 +1126,18 @@ export interface components {
         IppNetworkParams: {
             /** Host */
             host: string;
+            /**
+             * Input Tray
+             * @default
+             */
+            input_tray: string;
             /** Media */
             media?: string | null;
+            /**
+             * Output Bin
+             * @default
+             */
+            output_bin: string;
             /**
              * Port
              * @default 631

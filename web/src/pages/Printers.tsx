@@ -36,8 +36,14 @@ const EMPTY = {
   members: "",
   strategy: "failover",
   raster: false,
+  output_bin: "",
+  input_tray: "",
   allow_raw: false,
 };
+
+const OUTPUT_BINS = ["face-down", "face-up", "top", "left", "center", "rear",
+  "tray-1", "tray-2", "stacker-1", "mailbox-1"];
+const INPUT_TRAYS = ["auto", "main", "manual", "bypass", "tray-1", "tray-2", "tray-3", "tray-4"];
 
 export function PrintersPage() {
   const qc = useQueryClient();
@@ -134,6 +140,8 @@ export function PrintersPage() {
       members: Array.isArray(p.params.members) ? (p.params.members as number[]).join(", ") : "",
       strategy: String(p.params.strategy ?? "failover"),
       raster: Boolean(p.params.raster),
+      output_bin: String(p.params.output_bin ?? ""),
+      input_tray: String(p.params.input_tray ?? ""),
       allow_raw: p.allow_raw,
     });
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
@@ -289,9 +297,12 @@ export function PrintersPage() {
                   onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
                 />
                 {form.type === "ipp_network" && (
-                  <p className="muted" style={{ fontSize: 12 }}>
-                    Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
-                  </p>
+                  <>
+                    <p className="muted" style={{ fontSize: 12 }}>
+                      Direct IPP — sends PDF straight to the printer, no CUPS queue to provision.
+                    </p>
+                    <TrayFields form={form} setForm={setForm} />
+                  </>
                 )}
               </>
             )}
@@ -331,6 +342,7 @@ export function PrintersPage() {
                   onChange={(e) => setForm({ ...form, device_uri: e.target.value })}
                   placeholder="ipp://192.168.1.50/ipp/print"
                 />
+                <TrayFields form={form} setForm={setForm} />
               </>
             )}
             {form.type !== "cups" && (
@@ -387,6 +399,29 @@ function pulseCapable(p: Printer): boolean {
   const caps = p.capabilities as { pulse?: boolean } | undefined;
   if (caps && typeof caps.pulse === "boolean") return caps.pulse;
   return ["escpos_network", "escpos_usb", "star_network", "virtual", "pool"].includes(p.type);
+}
+
+function TrayFields({ form, setForm }: { form: typeof EMPTY; setForm: (f: typeof EMPTY) => void }) {
+  return (
+    <>
+      <label>Output tray <span className="muted">(optional)</span></label>
+      <input
+        list="vp-output-bins"
+        value={form.output_bin}
+        placeholder="e.g. face-down, tray-1, stacker-1"
+        onChange={(e) => setForm({ ...form, output_bin: e.target.value })}
+      />
+      <label>Input tray <span className="muted">(optional)</span></label>
+      <input
+        list="vp-input-trays"
+        value={form.input_tray}
+        placeholder="e.g. auto, tray-2, manual"
+        onChange={(e) => setForm({ ...form, input_tray: e.target.value })}
+      />
+      <datalist id="vp-output-bins">{OUTPUT_BINS.map((v) => <option key={v} value={v} />)}</datalist>
+      <datalist id="vp-input-trays">{INPUT_TRAYS.map((v) => <option key={v} value={v} />)}</datalist>
+    </>
+  );
 }
 
 function typeOptions(editing: Printer | null): string[] {
@@ -494,9 +529,15 @@ function buildParams(form: typeof EMPTY): Record<string, unknown> {
   if (form.type === "escpos_network") Object.assign(params, { host: form.host, port: form.port, columns: form.columns });
   if (form.type === "escpos_usb")
     Object.assign(params, { vendor_id: parseInt(form.vendor_id, 16), product_id: parseInt(form.product_id, 16) });
+  const trays = {
+    ...(form.output_bin ? { output_bin: form.output_bin } : {}),
+    ...(form.input_tray ? { input_tray: form.input_tray } : {}),
+  };
   if (form.type === "cups")
-    Object.assign(params, { queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}) });
-  if (form.type === "ipp_network" || form.type === "star_network")
+    Object.assign(params, { queue: form.queue, ...(form.device_uri ? { device_uri: form.device_uri } : {}), ...trays });
+  if (form.type === "ipp_network")
+    Object.assign(params, { host: form.host, port: form.port, ...trays });
+  if (form.type === "star_network")
     Object.assign(params, { host: form.host, port: form.port });
   if (form.type === "zpl_network")
     Object.assign(params, { host: form.host, port: form.port, raster: form.raster });

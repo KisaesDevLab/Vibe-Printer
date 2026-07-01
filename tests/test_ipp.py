@@ -6,7 +6,13 @@ from conftest import wait_for_job
 
 from app.backends.base import PrintPayload, SendResult
 from app.backends.ipp_network import IppNetworkBackend
-from app.ipp_client import OP_GET_PRINTER_ATTRS, _build, _ipp_status, build_uri
+from app.ipp_client import (
+    OP_GET_PRINTER_ATTRS,
+    _build,
+    _ipp_status,
+    build_print_job,
+    build_uri,
+)
 from app.models import Capabilities
 
 
@@ -27,6 +33,32 @@ def test_ipp_status_parse():
 def test_build_uri():
     assert build_uri("h") == "ipp://h:631/ipp/print"
     assert build_uri("h", 443, "/x", True) == "ipps://h:443/x"
+
+
+def test_print_job_carries_output_bin_and_input_tray():
+    body = build_print_job("ipp://x/ipp/print", b"%PDF-1.4", output_bin="stacker-1",
+                           input_tray="tray-2")
+    assert b"\x02" in body  # job-attributes-tag group present
+    assert b"output-bin" in body and b"stacker-1" in body
+    assert b"media-col" in body and b"media-source" in body and b"tray-2" in body
+    assert body[-8:] == b"%PDF-1.4"  # document follows the attributes
+
+
+def test_print_job_omits_trays_when_unset():
+    body = build_print_job("ipp://x/ipp/print", b"%PDF")
+    assert b"output-bin" not in body and b"media-col" not in body
+
+
+def test_ipp_backend_passes_trays(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(
+        "app.ipp_client.print_pdf",
+        lambda uri, pdf, **k: seen.update(k) or len(pdf),
+    )
+    IppNetworkBackend(1, {"host": "h", "output_bin": "face-up", "input_tray": "tray-3"}).send(
+        PrintPayload(kind="pdf", data=b"%PDF")
+    )
+    assert seen["output_bin"] == "face-up" and seen["input_tray"] == "tray-3"
 
 
 # --- backend (client monkeypatched) ---
@@ -96,6 +128,20 @@ def test_ipp_prints_overlay_as_pdf(client, monkeypatch):
     job = wait_for_job(client, r.json()["job_id"])
     assert job["status"] == "done"
     assert seen == ["pdf"]
+
+
+def test_cups_and_ipp_accept_tray_params(client):
+    c = client.post(
+        "/v1/admin/printers",
+        json={"name": "C2", "params": {"type": "cups", "queue": "q",
+                                       "output_bin": "stacker-1", "input_tray": "tray-2"}},
+    ).json()
+    assert c["params"]["output_bin"] == "stacker-1" and c["params"]["input_tray"] == "tray-2"
+    i = client.post(
+        "/v1/admin/printers",
+        json={"name": "I2", "params": {"type": "ipp_network", "host": "h", "output_bin": "face-up"}},
+    ).json()
+    assert i["params"]["output_bin"] == "face-up"
 
 
 # --- CUPS device_uri persistence (for startup re-provision) ---

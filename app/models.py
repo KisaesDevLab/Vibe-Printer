@@ -42,6 +42,8 @@ class CupsParams(BaseModel):
     type: Literal["cups"] = "cups"
     queue: str
     media: str | None = None
+    output_bin: str = ""  # IPP output-bin (e.g. face-up, face-down, tray-1, stacker-1, mailbox-1)
+    input_tray: str = ""  # IPP media-source (e.g. tray-1, tray-2, manual, auto)
     # Stored so the queue can be auto-(re)provisioned on startup (durable across rebuilds).
     device_uri: str | None = None
     make_model: str = "everywhere"
@@ -56,6 +58,8 @@ class IppNetworkParams(BaseModel):
     uri_path: str = "/ipp/print"
     tls: bool = False
     media: str | None = None
+    output_bin: str = ""  # IPP output-bin keyword
+    input_tray: str = ""  # IPP media-source (sent as media-col{media-source})
     uri: str | None = None  # full override; otherwise built from host/port/uri_path
 
 
