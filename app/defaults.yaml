@@ -114,17 +114,8 @@ templates:
       amount: '14.50'
     receipt_url: https://pay.stripe.com/receipts/acct_123/ch_3PabcXYZ
 - name: File Routing Sheet
-  html: "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\"/>\n<style>\n  * { box-sizing: border-box; }\n  body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11px; margin: 0;\
-    \ }\n  .sheet { padding: 4px 2px; page-break-after: always; }\n  .sheet:last-child { page-break-after: auto; }\n  .clienthead { text-align: left; font-size: 16px; font-weight: bold; margin-bottom: 2px;\
-    \ }\n  .title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }\n  .section { background: #111;\
-    \ color: #fff; font-weight: bold; padding: 2px 6px; margin: 8px 0 4px; font-size: 11px; }\n  .row { margin: 3px 0; }\n  .lab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333;\
-    \ }\n  .cval { border-bottom: 1px solid #999; display: inline-block; min-width: 60%; }\n  table { width: 100%; border-collapse: collapse; }\n  .contactlog td { border: 1px solid #ccc; padding: 3px 6px;\
-    \ font-size: 10px; }\n  .dateby { width: 45%; }\n  .engtbl td { border: 1px solid #ccc; padding: 4px 6px; width: 50%; vertical-align: top; }\n  .contacts td.contact { border: 1px solid #ccc; padding:\
-    \ 4px 6px; width: 50%; vertical-align: top; }\n  .contact .who { font-weight: bold; font-size: 10px; color: #333; }\n  .contact .nm { font-weight: bold; }\n  .contact .ln { font-size: 10px; }\n  .grp\
-    \ { margin: 6px 0; }\n  .grplab { font-weight: bold; text-transform: uppercase; font-size: 10px; color: #333; margin-bottom: 2px; }\n  .cb { display: inline-block; margin-right: 12px; font-size: 10px;\
-    \ white-space: nowrap; }\n  .box { display: inline-block; width: 10px; height: 10px; border: 1px solid #333; margin-right: 4px; vertical-align: middle; }\n  .signoff td { border: 1px solid #ccc; padding:\
-    \ 8px 6px; text-align: center; font-size: 10px; font-weight: bold; width: 33.33%; }\n  .notes { border: 1px solid #999; min-height: 90px; padding: 6px; white-space: pre-wrap; }\n</style>\n</head>\n\
-    <body>\n  <div class=\"sheet\">\n    <div class=\"clienthead\">CLIENT: {{client.name}}</div>\n    <div class=\"title\">FILE ROUTING SHEET</div>\n\n    <table class=\"contactlog\">\n      <tr>\n    \
+  html: "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\"/>\n</head>\n\
+    <body>\n  <div class=\"sheet\">\n    {% if qr %}<img class=\"qrtr\" src=\"{{ qr | qr_data_uri(box_size=3) }}\" alt=\"QR\"/>{% endif %}\n    <div class=\"clienthead\">CLIENT: {{client.name}}</div>\n    <div class=\"title\">FILE ROUTING SHEET</div>\n\n    <table class=\"contactlog\">\n      <tr>\n    \
     \    <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span class=\"\
     cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span class=\"box\"></span>SMS</span></td>\n      </tr>\n      <tr>\n        <td class=\"dateby\">Date/By ____________</td>\n        <td class=\"\
     chan\"><span class=\"cb\"><span class=\"box\"></span>PHN</span><span class=\"cb\"><span class=\"box\"></span>VM</span><span class=\"cb\"><span class=\"box\"></span>EM</span><span class=\"cb\"><span\
@@ -153,13 +144,13 @@ templates:
 
     body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11px; margin: 0; }
 
-    .sheet { padding: 4px 2px; page-break-after: always; }
+    .sheet { position: relative; padding: 4px 2px; page-break-after: always; }
 
     .sheet:last-child { page-break-after: auto; }
 
-    .clienthead { text-align: left; font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+    .clienthead { text-align: left; font-size: 16px; font-weight: bold; margin: 0 72px 2px 0; }
 
-    .title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px; }
+    .title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 1px; border-bottom: 2px solid #111; padding-bottom: 4px; margin: 0 72px 18px; }
 
     .section { background: #111; color: #fff; font-weight: bold; padding: 2px 6px; margin: 8px 0 4px; font-size: 11px; }
 
@@ -195,7 +186,9 @@ templates:
 
     .signoff td { border: 1px solid #ccc; padding: 8px 6px; text-align: center; font-size: 10px; font-weight: bold; width: 33.33%; }
 
-    .notes { border: 1px solid #999; min-height: 90px; padding: 6px; white-space: pre-wrap; }'
+    .notes { border: 1px solid #999; min-height: 90px; padding: 6px; white-space: pre-wrap; }
+
+    .qrtr { position: absolute; top: 0; right: 0; width: 64px; height: 64px; }'
   page_setup:
     size: Letter
     margins: 2cm
@@ -210,6 +203,7 @@ templates:
     workflowStateLabel: In Review
     dueDate: '2026-04-15'
     assignees: M. Lopez, T. Brooks
+    qr: https://portal.example/eng/2025-1120-riverside
     primary:
       name: Dana Whitfield
       email: dana@riverside.example

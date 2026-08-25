@@ -166,10 +166,18 @@ def render_pdf(html: str, css: str, page_setup: dict[str, Any], data: dict[str, 
     assets_root = assets_dir.resolve()
 
     def url_fetcher(url: str, **kwargs: Any) -> dict[str, Any]:
-        # Allow only files under the assets dir — block http(s), file:// escapes (SSRF lockdown).
+        # Allow only data: URIs and files under the assets dir — block http(s), file://
+        # escapes (SSRF lockdown).
         from urllib.parse import unquote, urlparse
 
         parsed = urlparse(url)
+        if parsed.scheme == "data":
+            # Self-contained inline resource (e.g. the qr_data_uri filter) — decoded
+            # in-memory by urllib's DataHandler, no network or file I/O involved.
+            from urllib.request import urlopen
+
+            with urlopen(url) as resp:
+                return {"string": resp.read(), "mime_type": resp.headers.get_content_type()}
         if parsed.scheme in ("http", "https"):
             raise URLFetchingError(f"remote fetch blocked: {url}")
         if parsed.scheme in ("file", ""):
